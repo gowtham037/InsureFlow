@@ -199,7 +199,7 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
 
     anm_2 = {
         "anomaly_id": generate_anomaly_id(anomaly_counter),
-        "entity_type": "PREMIUM",
+        "entity_type": "POLICY",
         "entity_id": anm2_pol_id,
         "issue_type": "PREMIUM_FORMULA_MISMATCH",
         "severity": "HIGH",
@@ -519,7 +519,7 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
 
     anm_5 = {
         "anomaly_id": generate_anomaly_id(anomaly_counter),
-        "entity_type": "POLICY_PERIOD",
+        "entity_type": "POLICY",
         "entity_id": anm5_overlap_pol_id,
         "issue_type": "OVERLAPPING_POLICY_PERIOD",
         "severity": "HIGH",

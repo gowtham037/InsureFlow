@@ -16,9 +16,9 @@
     "entity_id": "POL-2026-990002",
     "issue_type": "PREMIUM_FORMULA_MISMATCH",
     "severity": "HIGH",
-    "description": "Policy POL-2026-990002 premium ($244.02) violates pricing formula ($697.20).",
-    "expected_outcome": "Annual premium should strictly reconcile with formula ($697.20)",
-    "actual_detected_outcome": "Stored premium is $244.02",
+    "description": "Policy POL-2026-990002 premium ($1,199.70) violates pricing formula ($3,427.72).",
+    "expected_outcome": "Annual premium should strictly reconcile with formula ($3,427.72)",
+    "actual_detected_outcome": "Stored premium is $1,199.70",
     "ground_truth_label": true
   },
   {
@@ -49,7 +49,7 @@
     "entity_id": "POL-2026-990006",
     "issue_type": "OVERLAPPING_POLICY_PERIOD",
     "severity": "HIGH",
-    "description": "Active policy POL-2026-990006 overlaps with active policy POL-2026-990005 for asset 19296.",
+    "description": "Active policy POL-2026-990006 overlaps with active policy POL-2026-990005 for asset 24.",
     "expected_outcome": "No duplicate active policies allowed on the same asset during overlapping periods",
     "actual_detected_outcome": "Overlapping active policies detected (POL-2026-990005 and POL-2026-990006).",
     "ground_truth_label": true

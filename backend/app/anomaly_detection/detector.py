@@ -83,7 +83,7 @@ def run_anomaly_detection(db: Session) -> List[AnomalyRecord]:
             if delta > 2.00:  # Tolerance threshold for rounding
                 rec = AnomalyRecord(
                     business_id=generate_anomaly_id(counter),
-                    entity_type="PREMIUM",
+                    entity_type="POLICY",
                     entity_id=pol.business_id,
                     issue_type="PREMIUM_FORMULA_MISMATCH",
                     severity="HIGH",
@@ -196,7 +196,7 @@ def run_anomaly_detection(db: Session) -> List[AnomalyRecord]:
                         seen_pairs.add(pair_key)
                         rec = AnomalyRecord(
                             business_id=generate_anomaly_id(counter),
-                            entity_type="POLICY_PERIOD",
+                            entity_type="POLICY",
                             entity_id=p2.business_id,
                             issue_type="OVERLAPPING_POLICY_PERIOD",
                             severity="HIGH",

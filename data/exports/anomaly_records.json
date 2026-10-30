@@ -16,9 +16,9 @@
     "entity_id": "POL-2026-990002",
     "issue_type": "PREMIUM_FORMULA_MISMATCH",
     "severity": "HIGH",
-    "description": "Policy POL-2026-990002 premium ($244.02) deviates from standard actuarial formula output ($697.20) by $453.18.",
-    "expected_outcome": "Annual premium must equal formula result ($697.20).",
-    "actual_detected_outcome": "Stored annual premium is $244.02.",
+    "description": "Policy POL-2026-990002 premium ($1,199.70) deviates from standard actuarial formula output ($3,427.72) by $2,228.02.",
+    "expected_outcome": "Annual premium must equal formula result ($3,427.72).",
+    "actual_detected_outcome": "Stored annual premium is $1,199.70.",
     "detection_rule": "RULE-INV-002: Actuarial Formula Reconciliation Invariant"
   },
   {
@@ -49,7 +49,7 @@
     "entity_id": "POL-2026-990006",
     "issue_type": "OVERLAPPING_POLICY_PERIOD",
     "severity": "HIGH",
-    "description": "Active policy POL-2026-990006 [2026-11-06 to 2027-11-06] overlaps with active policy POL-2026-990005 [2026-10-22 to 2027-10-22] for the same asset (Asset ID: 19296).",
+    "description": "Active policy POL-2026-990006 [2026-11-06 to 2027-11-06] overlaps with active policy POL-2026-990005 [2026-10-22 to 2027-10-22] for the same asset (Asset ID: 24).",
     "expected_outcome": "No simultaneous overlapping active coverage periods permitted on the same insured asset.",
     "actual_detected_outcome": "Overlapping active policies detected (POL-2026-990005 and POL-2026-990006).",
     "detection_rule": "RULE-INV-005: Double Insurance / Period Overlap Invariant"
