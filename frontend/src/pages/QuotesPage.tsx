@@ -15,7 +15,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Activity,
-  AlertCircle
+  AlertCircle,
+  AlertTriangle,
+  Car,
+  Home,
+  Heart,
+  Sparkles
 } from 'lucide-react';
 
 export const QuotesPage: React.FC = () => {
@@ -36,6 +41,14 @@ export const QuotesPage: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [applicantsList, setApplicantsList] = useState<Applicant[]>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
+  const [isRegisteringAsset, setIsRegisteringAsset] = useState<boolean>(false);
+  const [newAssetData, setNewAssetData] = useState({
+    asset_type: 'MOTOR_VEHICLE',
+    make_model: '2022 Honda Civic',
+    asset_value: 32000,
+    year_built_or_manufactured: 2022,
+    location_tier: 'TIER_1'
+  });
   const [formData, setFormData] = useState({
     applicant_id: 0,
     asset_id: 0,
@@ -77,7 +90,9 @@ export const QuotesPage: React.FC = () => {
       setProductsList(prods);
       if (apps.items.length > 0 && prods.length > 0) {
         const firstApp = apps.items[0];
-        const firstAssetId = firstApp.assets && firstApp.assets.length > 0 ? firstApp.assets[0].id : 1;
+        const hasAssets = firstApp.assets && firstApp.assets.length > 0;
+        const firstAssetId = hasAssets ? firstApp.assets![0].id : 0;
+        setIsRegisteringAsset(!hasAssets);
         setFormData({
           applicant_id: firstApp.id,
           asset_id: firstAssetId,
@@ -95,7 +110,27 @@ export const QuotesPage: React.FC = () => {
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const created = await apiClient.createQuote(formData);
+      const selectedApp = applicantsList.find(a => a.id === formData.applicant_id);
+      const appAssets = selectedApp?.assets || [];
+      let finalAssetId = formData.asset_id;
+
+      if (isRegisteringAsset || appAssets.length === 0 || !finalAssetId) {
+        // Register new asset for applicant
+        const createdAsset = await apiClient.createAsset(formData.applicant_id, newAssetData);
+        finalAssetId = createdAsset.id;
+        // update applicant list with new asset
+        setApplicantsList(prev => prev.map(a => {
+          if (a.id === formData.applicant_id) {
+            return { ...a, assets: [...(a.assets || []), createdAsset] };
+          }
+          return a;
+        }));
+      }
+
+      const created = await apiClient.createQuote({
+        ...formData,
+        asset_id: finalAssetId
+      });
       setIsCreateOpen(false);
       setSelectedQuote(created);
       setIsDetailOpen(true);
@@ -404,32 +439,18 @@ export const QuotesPage: React.FC = () => {
               onChange={(e) => {
                 const appId = parseInt(e.target.value);
                 const app = applicantsList.find(a => a.id === appId);
-                const assetId = app?.assets && app.assets.length > 0 ? app.assets[0].id : 1;
+                const hasAssets = !!(app?.assets && app.assets.length > 0);
+                const assetId = hasAssets ? app!.assets![0].id : 0;
+                setIsRegisteringAsset(!hasAssets);
                 setFormData({ ...formData, applicant_id: appId, asset_id: assetId });
               }}
               className="w-full text-sm p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 bg-white"
             >
               {applicantsList.map(a => (
                 <option key={a.id} value={a.id}>
-                  {a.business_id} – {a.first_name} {a.last_name} ({a.city}, {a.state})
+                  {a.business_id} – {a.first_name} {a.last_name} ({a.city}, {a.state}) [{a.assets?.length || 0} assets]
                 </option>
               ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">Select Insured Asset</label>
-            <select
-              required
-              value={formData.asset_id}
-              onChange={(e) => setFormData({ ...formData, asset_id: parseInt(e.target.value) })}
-              className="w-full text-sm p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 bg-white"
-            >
-              {applicantsList.find(a => a.id === formData.applicant_id)?.assets?.map(ast => (
-                <option key={ast.id} value={ast.id}>
-                  {ast.business_id} – {ast.make_model} (${ast.asset_value?.toLocaleString()})
-                </option>
-              )) || <option value={1}>Asset 1</option>}
             </select>
           </div>
 
@@ -438,7 +459,28 @@ export const QuotesPage: React.FC = () => {
             <select
               required
               value={formData.product_id}
-              onChange={(e) => setFormData({ ...formData, product_id: parseInt(e.target.value) })}
+              onChange={(e) => {
+                const prodId = parseInt(e.target.value);
+                const prod = productsList.find(p => p.id === prodId);
+                let newType = newAssetData.asset_type;
+                let newModel = newAssetData.make_model;
+                let newVal = newAssetData.asset_value;
+                if (prod?.line_of_business === 'MOTOR') {
+                  newType = 'MOTOR_VEHICLE';
+                  newModel = '2022 Honda Civic';
+                  newVal = 32000;
+                } else if (prod?.line_of_business === 'HOME') {
+                  newType = 'RESIDENTIAL_PROPERTY';
+                  newModel = 'Single Family Residence';
+                  newVal = 350000;
+                } else if (prod?.line_of_business === 'HEALTH') {
+                  newType = 'INDIVIDUAL_HEALTH';
+                  newModel = 'Comprehensive Health Profile';
+                  newVal = 100000;
+                }
+                setNewAssetData(prev => ({ ...prev, asset_type: newType, make_model: newModel, asset_value: newVal }));
+                setFormData({ ...formData, product_id: prodId });
+              }}
               className="w-full text-sm p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 bg-white"
             >
               {productsList.map(p => (
@@ -447,6 +489,123 @@ export const QuotesPage: React.FC = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Insured Asset Selection or Registration */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-slate-700">Select Insured Asset</label>
+              {applicantsList.find(a => a.id === formData.applicant_id)?.assets?.length ? (
+                <button
+                  type="button"
+                  onClick={() => setIsRegisteringAsset(!isRegisteringAsset)}
+                  className="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  {isRegisteringAsset ? "Select Existing Asset" : "Register New Asset"}
+                </button>
+              ) : null}
+            </div>
+
+            {(!applicantsList.find(a => a.id === formData.applicant_id)?.assets?.length || isRegisteringAsset) ? (
+              <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-brand-600" />
+                    <span className="text-xs font-bold text-slate-800">
+                      {applicantsList.find(a => a.id === formData.applicant_id)?.assets?.length 
+                        ? "Register New Asset for Applicant" 
+                        : "Applicant Has No Assets – Register Insured Asset"}
+                    </span>
+                  </div>
+                  {!applicantsList.find(a => a.id === formData.applicant_id)?.assets?.length && (
+                    <span className="text-[10px] font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3 text-amber-600" />
+                      Required for Quote
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">Asset Category</label>
+                    <select
+                      value={newAssetData.asset_type}
+                      onChange={(e) => setNewAssetData({ ...newAssetData, asset_type: e.target.value })}
+                      className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                    >
+                      <option value="MOTOR_VEHICLE">Motor Vehicle</option>
+                      <option value="RESIDENTIAL_PROPERTY">Residential Property</option>
+                      <option value="INDIVIDUAL_HEALTH">Individual Health Profile</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">Make / Model / Description</label>
+                    <input
+                      required
+                      type="text"
+                      value={newAssetData.make_model}
+                      onChange={(e) => setNewAssetData({ ...newAssetData, make_model: e.target.value })}
+                      placeholder="e.g. 2022 Honda Civic"
+                      className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">Asset Value ($)</label>
+                    <input
+                      required
+                      type="number"
+                      value={newAssetData.asset_value}
+                      onChange={(e) => setNewAssetData({ ...newAssetData, asset_value: parseFloat(e.target.value) || 0 })}
+                      className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">Year Built / Manufactured</label>
+                    <input
+                      required
+                      type="number"
+                      value={newAssetData.year_built_or_manufactured}
+                      onChange={(e) => setNewAssetData({ ...newAssetData, year_built_or_manufactured: parseInt(e.target.value) || 2022 })}
+                      className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">Location Risk Tier</label>
+                    <select
+                      value={newAssetData.location_tier}
+                      onChange={(e) => setNewAssetData({ ...newAssetData, location_tier: e.target.value })}
+                      className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                    >
+                      <option value="TIER_1">Tier 1 – Standard / Suburban (Low Risk)</option>
+                      <option value="TIER_2">Tier 2 – Moderate Risk / Urban</option>
+                      <option value="TIER_3">Tier 3 – High Density / Elevated Risk</option>
+                      <option value="HIGH_RISK_ZONE">High Risk Zone (Flood / Severe Hazard)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <select
+                required
+                value={formData.asset_id}
+                onChange={(e) => {
+                  if (e.target.value === 'new') {
+                    setIsRegisteringAsset(true);
+                  } else {
+                    setFormData({ ...formData, asset_id: parseInt(e.target.value) });
+                  }
+                }}
+                className="w-full text-sm p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 bg-white"
+              >
+                {applicantsList.find(a => a.id === formData.applicant_id)?.assets?.map(ast => (
+                  <option key={ast.id} value={ast.id}>
+                    {ast.business_id} – {ast.make_model} (${ast.asset_value?.toLocaleString()})
+                  </option>
+                ))}
+                <option value="new">+ Register Another Asset for this Applicant...</option>
+              </select>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

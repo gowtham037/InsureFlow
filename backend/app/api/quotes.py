@@ -13,7 +13,8 @@ from backend.app.rules.eligibility import evaluate_eligibility
 from backend.app.rules.pricing import calculate_premium
 from backend.app.rules.risk_scoring import calculate_risk_score
 from backend.app.rules.underwriting_rules import determine_underwriting_decision
-from backend.app.utils.sequence import generate_quote_id, generate_decision_id
+from backend.app.schemas.applicant import InsuredAssetCreate
+from backend.app.utils.sequence import generate_quote_id, generate_decision_id, generate_asset_id
 
 router = APIRouter(prefix="/quotes", tags=["Quotes"])
 
@@ -63,13 +64,77 @@ def create_quote(payload: QuoteCreate, db: Session = Depends(get_db)):
     if not applicant:
         raise HTTPException(status_code=404, detail="Applicant not found.")
 
-    asset = db.query(InsuredAsset).filter(InsuredAsset.id == payload.asset_id).first()
-    if not asset:
-        raise HTTPException(status_code=404, detail="Insured Asset not found.")
-
     product = db.query(Product).filter(Product.id == payload.product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found.")
+
+    asset = None
+    if payload.asset_id:
+        asset = db.query(InsuredAsset).filter(InsuredAsset.id == payload.asset_id).first()
+
+    # If no valid asset_id provided or found, resolve via new_asset or auto-creation
+    if not asset:
+        ast_payload = payload.new_asset
+        if not ast_payload:
+            # Check if applicant has any matching existing asset
+            matching = [
+                a for a in applicant.assets
+                if (product.line_of_business == "MOTOR" and a.asset_type == "MOTOR_VEHICLE")
+                or (product.line_of_business == "HOME" and a.asset_type == "RESIDENTIAL_PROPERTY")
+                or (product.line_of_business == "HEALTH" and a.asset_type == "INDIVIDUAL_HEALTH")
+            ]
+            if matching:
+                asset = matching[0]
+            elif applicant.assets:
+                asset = applicant.assets[0]
+            else:
+                # Auto-generate default compatible asset
+                if product.line_of_business == "MOTOR":
+                    ast_payload = InsuredAssetCreate(
+                        asset_type="MOTOR_VEHICLE",
+                        make_model="Standard Passenger Vehicle",
+                        asset_value=max(payload.coverage_amount * 0.9, 25000.0),
+                        year_built_or_manufactured=2021,
+                        location_tier="TIER_1"
+                    )
+                elif product.line_of_business == "HOME":
+                    ast_payload = InsuredAssetCreate(
+                        asset_type="RESIDENTIAL_PROPERTY",
+                        make_model="Residential Single Family",
+                        asset_value=max(payload.coverage_amount, 250000.0),
+                        year_built_or_manufactured=2018,
+                        location_tier="TIER_2"
+                    )
+                else:
+                    ast_payload = InsuredAssetCreate(
+                        asset_type="INDIVIDUAL_HEALTH",
+                        make_model="Comprehensive Health Profile",
+                        asset_value=payload.coverage_amount,
+                        year_built_or_manufactured=applicant.date_of_birth.year,
+                        location_tier="TIER_2"
+                    )
+
+        if not asset and ast_payload:
+            ast_count = db.query(InsuredAsset).count()
+            ast_business_id = generate_asset_id(ast_count + 1)
+            ident = ast_payload.identifier or f"ID-{ast_payload.asset_type[:3]}-{ast_count + 1:06d}"
+            asset = InsuredAsset(
+                business_id=ast_business_id,
+                applicant_id=applicant.id,
+                asset_type=ast_payload.asset_type,
+                identifier=ident,
+                asset_value=ast_payload.asset_value,
+                year_built_or_manufactured=ast_payload.year_built_or_manufactured,
+                make_model=ast_payload.make_model,
+                location_tier=ast_payload.location_tier,
+                details=ast_payload.details or {}
+            )
+            db.add(asset)
+            db.commit()
+            db.refresh(asset)
+
+    if not asset:
+        raise HTTPException(status_code=400, detail="Could not determine or create an insured asset for this quote.")
 
     # 1. Eligibility Check
     is_eligible, elig_reasons = evaluate_eligibility(

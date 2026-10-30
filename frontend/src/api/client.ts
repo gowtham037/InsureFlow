@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {
   Applicant,
+  InsuredAsset,
   Product,
   Quote,
   Policy,
@@ -38,7 +39,10 @@ export const apiClient = {
       `/applicants?page=${page}&page_size=${pageSize}${search ? `&search=${encodeURIComponent(search)}` : ''}`
     ).then(res => res.data),
   getApplicant: (id: number) => api.get<Applicant>(`/applicants/${id}`).then(res => res.data),
-  createApplicant: (data: Partial<Applicant>) => api.post<Applicant>('/applicants', data).then(res => res.data),
+  createApplicant: (data: Partial<Applicant> & { initial_asset?: Partial<InsuredAsset> }) =>
+    api.post<Applicant>('/applicants', data).then(res => res.data),
+  createAsset: (applicantId: number, data: Partial<InsuredAsset>) =>
+    api.post<InsuredAsset>(`/applicants/${applicantId}/assets`, data).then(res => res.data),
 
   // Products
   getProducts: () => api.get<Product[]>('/products').then(res => res.data),
@@ -53,8 +57,14 @@ export const apiClient = {
     return api.get<{ total: number; page: number; page_size: number; items: Quote[] }>(url).then(res => res.data);
   },
   getQuote: (id: number) => api.get<Quote>(`/quotes/${id}`).then(res => res.data),
-  createQuote: (data: { applicant_id: number; asset_id: number; product_id: number; coverage_amount: number; deductible: number }) =>
-    api.post<Quote>('/quotes', data).then(res => res.data),
+  createQuote: (data: {
+    applicant_id: number;
+    asset_id?: number;
+    product_id: number;
+    coverage_amount: number;
+    deductible: number;
+    new_asset?: Partial<InsuredAsset>;
+  }) => api.post<Quote>('/quotes', data).then(res => res.data),
   evaluateQuote: (id: number) => api.post<Quote>(`/quotes/${id}/evaluate`).then(res => res.data),
   acceptQuote: (id: number) => api.post<Quote>(`/quotes/${id}/accept`).then(res => res.data),
 

@@ -16,6 +16,26 @@ export const ApplicantsPage: React.FC = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
+  // Initial asset registration state for new applicant
+  const [includeInitialAsset, setIncludeInitialAsset] = useState(true);
+  const [initialAssetData, setInitialAssetData] = useState({
+    asset_type: 'MOTOR_VEHICLE',
+    make_model: '2022 Honda Civic',
+    asset_value: 30000,
+    year_built_or_manufactured: 2022,
+    location_tier: 'TIER_1'
+  });
+
+  // Adding asset directly from applicant details modal
+  const [isAddingAssetToDetail, setIsAddingAssetToDetail] = useState(false);
+  const [newDetailAsset, setNewDetailAsset] = useState({
+    asset_type: 'MOTOR_VEHICLE',
+    make_model: '2023 Toyota RAV4',
+    asset_value: 35000,
+    year_built_or_manufactured: 2023,
+    location_tier: 'TIER_1'
+  });
+
   // Form state
   const [formData, setFormData] = useState({
     first_name: '',
@@ -77,12 +97,32 @@ export const ApplicantsPage: React.FC = () => {
       return;
     }
     try {
-      await apiClient.createApplicant({ ...formData, phone: phoneDigits });
+      const payload: any = { ...formData, phone: phoneDigits };
+      if (includeInitialAsset) {
+        payload.initial_asset = initialAssetData;
+      }
+      await apiClient.createApplicant(payload);
       setIsCreateOpen(false);
       fetchApplicants(1, search);
     } catch (err: any) {
       const msg = err.response?.data?.detail?.[0]?.msg || err.response?.data?.detail || 'Failed to create applicant. Check field inputs.';
       alert(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    }
+  };
+
+  const handleAddAssetToApplicant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedApplicant) return;
+    try {
+      const created = await apiClient.createAsset(selectedApplicant.id, newDetailAsset);
+      setSelectedApplicant({
+        ...selectedApplicant,
+        assets: [...(selectedApplicant.assets || []), created]
+      });
+      setIsAddingAssetToDetail(false);
+      fetchApplicants(page, search);
+    } catch (err: any) {
+      alert(`Failed to add asset: ${err?.response?.data?.detail || err.message}`);
     }
   };
 
@@ -274,10 +314,103 @@ export const ApplicantsPage: React.FC = () => {
 
             {/* Assets List */}
             <div>
-              <h4 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-brand-600" />
-                Declared Insurable Assets ({selectedApplicant.assets?.length ?? 0})
-              </h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-brand-600" />
+                  Declared Insurable Assets ({selectedApplicant.assets?.length ?? 0})
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setIsAddingAssetToDetail(!isAddingAssetToDetail)}
+                  className="px-2.5 py-1 text-xs font-semibold bg-brand-50 text-brand-700 hover:bg-brand-100 rounded-lg flex items-center gap-1 border border-brand-200"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {isAddingAssetToDetail ? "Close Form" : "Add Asset"}
+                </button>
+              </div>
+
+              {isAddingAssetToDetail && (
+                <form onSubmit={handleAddAssetToApplicant} className="mb-4 bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                    <Plus className="w-3.5 h-3.5 text-brand-600" />
+                    <span>Register New Insurable Asset for {selectedApplicant.first_name}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Asset Category</label>
+                      <select
+                        value={newDetailAsset.asset_type}
+                        onChange={(e) => setNewDetailAsset({ ...newDetailAsset, asset_type: e.target.value })}
+                        className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                      >
+                        <option value="MOTOR_VEHICLE">Motor Vehicle</option>
+                        <option value="RESIDENTIAL_PROPERTY">Residential Property</option>
+                        <option value="INDIVIDUAL_HEALTH">Individual Health Profile</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Make / Model / Description</label>
+                      <input
+                        required
+                        type="text"
+                        value={newDetailAsset.make_model}
+                        onChange={(e) => setNewDetailAsset({ ...newDetailAsset, make_model: e.target.value })}
+                        placeholder="e.g. 2023 Toyota RAV4"
+                        className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Asset Value ($)</label>
+                      <input
+                        required
+                        type="number"
+                        value={newDetailAsset.asset_value}
+                        onChange={(e) => setNewDetailAsset({ ...newDetailAsset, asset_value: parseFloat(e.target.value) || 0 })}
+                        className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Year Built / Manufactured</label>
+                      <input
+                        required
+                        type="number"
+                        value={newDetailAsset.year_built_or_manufactured}
+                        onChange={(e) => setNewDetailAsset({ ...newDetailAsset, year_built_or_manufactured: parseInt(e.target.value) || 2023 })}
+                        className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Location Risk Tier</label>
+                      <select
+                        value={newDetailAsset.location_tier}
+                        onChange={(e) => setNewDetailAsset({ ...newDetailAsset, location_tier: e.target.value })}
+                        className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                      >
+                        <option value="TIER_1">Tier 1 – Standard / Suburban (Low Risk)</option>
+                        <option value="TIER_2">Tier 2 – Moderate Risk / Urban</option>
+                        <option value="TIER_3">Tier 3 – High Density / Elevated Risk</option>
+                        <option value="HIGH_RISK_ZONE">High Risk Zone (Flood / Severe Hazard)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingAssetToDetail(false)}
+                      className="px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-3 py-1.5 text-xs font-semibold text-white bg-brand-600 rounded-lg hover:bg-brand-700 shadow-xs"
+                    >
+                      Save Asset
+                    </button>
+                  </div>
+                </form>
+              )}
+
               <div className="space-y-3">
                 {selectedApplicant.assets && selectedApplicant.assets.length > 0 ? (
                   selectedApplicant.assets.map((asset) => (
@@ -301,7 +434,10 @@ export const ApplicantsPage: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-400">No assets registered for this applicant.</p>
+                  <div className="p-4 bg-amber-50/60 border border-amber-200 rounded-lg text-center">
+                    <p className="text-xs text-amber-800 font-medium">No insurable assets currently registered for this applicant.</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Click "Add Asset" above to declare a vehicle, home, or health profile.</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -482,6 +618,87 @@ export const ApplicantsPage: React.FC = () => {
                 className="w-full text-sm p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500"
               />
             </div>
+          </div>
+
+          {/* Initial Asset Registration */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={includeInitialAsset}
+                  onChange={(e) => setIncludeInitialAsset(e.target.checked)}
+                  className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4"
+                />
+                <span className="text-xs font-bold text-slate-800">
+                  Register Initial Insurable Asset <span className="text-brand-600 font-normal">(Required to generate instant quotes)</span>
+                </span>
+              </label>
+              <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                Recommended
+              </span>
+            </div>
+
+            {includeInitialAsset && (
+              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200/60">
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">Asset Category</label>
+                  <select
+                    value={initialAssetData.asset_type}
+                    onChange={(e) => setInitialAssetData({ ...initialAssetData, asset_type: e.target.value })}
+                    className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                  >
+                    <option value="MOTOR_VEHICLE">Motor Vehicle (e.g. Car / SUV)</option>
+                    <option value="RESIDENTIAL_PROPERTY">Residential Property (Home)</option>
+                    <option value="INDIVIDUAL_HEALTH">Individual Health Profile</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">Make / Model / Description</label>
+                  <input
+                    required={includeInitialAsset}
+                    type="text"
+                    value={initialAssetData.make_model}
+                    onChange={(e) => setInitialAssetData({ ...initialAssetData, make_model: e.target.value })}
+                    placeholder="e.g. 2022 Honda Civic"
+                    className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">Asset Value ($)</label>
+                  <input
+                    required={includeInitialAsset}
+                    type="number"
+                    value={initialAssetData.asset_value}
+                    onChange={(e) => setInitialAssetData({ ...initialAssetData, asset_value: parseFloat(e.target.value) || 0 })}
+                    className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">Year Built / Manufactured</label>
+                  <input
+                    required={includeInitialAsset}
+                    type="number"
+                    value={initialAssetData.year_built_or_manufactured}
+                    onChange={(e) => setInitialAssetData({ ...initialAssetData, year_built_or_manufactured: parseInt(e.target.value) || 2022 })}
+                    className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">Location Risk Tier</label>
+                  <select
+                    value={initialAssetData.location_tier}
+                    onChange={(e) => setInitialAssetData({ ...initialAssetData, location_tier: e.target.value })}
+                    className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white"
+                  >
+                    <option value="TIER_1">Tier 1 – Standard / Suburban (Low Risk)</option>
+                    <option value="TIER_2">Tier 2 – Moderate Risk / Urban</option>
+                    <option value="TIER_3">Tier 3 – High Density / Elevated Risk</option>
+                    <option value="HIGH_RISK_ZONE">High Risk Zone (Flood / Severe Hazard)</option>
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">

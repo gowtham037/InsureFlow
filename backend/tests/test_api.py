@@ -95,6 +95,66 @@ def test_quotes_endpoints():
     data = res.json()
     assert len(data["items"]) <= 5
 
+    # Test quote creation & evaluation for newly created applicant without prior assets
+    new_app_res = client.post("/api/applicants", json={
+        "first_name": "Fresh",
+        "last_name": "Applicant",
+        "email": f"fresh.app.{int(datetime.now().timestamp())}@example.com",
+        "phone": "9998887776",
+        "date_of_birth": "1995-05-15",
+        "gender": "FEMALE",
+        "address_line": "123 Main St",
+        "city": "Dallas",
+        "state": "TX",
+        "postal_code": "75001",
+        "annual_income": 75000.0,
+        "credit_score": 720,
+        "occupation": "Engineer",
+        "employment_status": "EMPLOYED",
+        "claims_count_5yr": 0
+    })
+    assert new_app_res.status_code == 201
+    fresh_app_id = new_app_res.json()["id"]
+
+    # Also test adding an asset explicitly to applicant
+    asset_res = client.post(f"/api/applicants/{fresh_app_id}/assets", json={
+        "asset_type": "MOTOR_VEHICLE",
+        "asset_value": 32000.0,
+        "year_built_or_manufactured": 2022,
+        "make_model": "Honda Civic Touring",
+        "location_tier": "TIER_1"
+    })
+    assert asset_res.status_code == 201
+    created_asset_id = asset_res.json()["id"]
+
+    # Create & evaluate quote for this applicant using the new asset
+    prod_res = client.get("/api/products")
+    prods = prod_res.json()
+    motor_prod = next(p for p in prods if p["line_of_business"] == "MOTOR")
+
+    quote_res = client.post("/api/quotes", json={
+        "applicant_id": fresh_app_id,
+        "asset_id": created_asset_id,
+        "product_id": motor_prod["id"],
+        "coverage_amount": 40000.0,
+        "deductible": 500.0
+    })
+    assert quote_res.status_code == 201
+    q_data = quote_res.json()
+    assert q_data["status"] in ["EVALUATED", "ACCEPTED"]
+    assert q_data["final_premium"] > 0
+    assert q_data["risk_score"] >= 0
+
+    # Test auto-resolution of asset when applicant has no explicit asset_id provided
+    quote_auto_res = client.post("/api/quotes", json={
+        "applicant_id": fresh_app_id,
+        "product_id": motor_prod["id"],
+        "coverage_amount": 35000.0,
+        "deductible": 500.0
+    })
+    assert quote_auto_res.status_code == 201
+    assert quote_auto_res.json()["final_premium"] > 0
+
 
 def test_underwriting_endpoints():
     res_dec = client.get("/api/underwriting/decisions?limit=10")

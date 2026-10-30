@@ -46,7 +46,19 @@ from pydantic import BaseModel, Field, field_validator
 import re
 
 
+class InsuredAssetCreate(BaseModel):
+    asset_type: str = "MOTOR_VEHICLE"
+    identifier: Optional[str] = None
+    asset_value: float = 35000.0
+    year_built_or_manufactured: int = 2021
+    make_model: str = "Standard Passenger Vehicle"
+    location_tier: str = "TIER_1"
+    details: Optional[dict] = None
+
+
 class ApplicantCreate(ApplicantBase):
+    initial_asset: Optional[InsuredAssetCreate] = None
+
     @field_validator("phone")
     @classmethod
     def validate_phone_10_digits(cls, v: str) -> str:

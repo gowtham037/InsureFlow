@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, date
 from backend.app.database import get_db
 from backend.app.models.applicant import Applicant
 from backend.app.models.asset import InsuredAsset
-from backend.app.schemas.applicant import ApplicantCreate, ApplicantResponse, ApplicantListResponse, InsuredAssetResponse
-from backend.app.utils.sequence import generate_applicant_id
+from backend.app.schemas.applicant import ApplicantCreate, ApplicantResponse, ApplicantListResponse, InsuredAssetResponse, InsuredAssetCreate
+from backend.app.utils.sequence import generate_applicant_id, generate_asset_id
 
 router = APIRouter(prefix="/applicants", tags=["Applicants"])
 
@@ -85,4 +85,60 @@ def create_applicant(payload: ApplicantCreate, db: Session = Depends(get_db)):
     db.add(app)
     db.commit()
     db.refresh(app)
+
+    # Optional initial asset creation
+    if payload.initial_asset:
+        ast_count = db.query(InsuredAsset).count()
+        ast_business_id = generate_asset_id(ast_count + 1)
+        ident = payload.initial_asset.identifier or f"ID-{payload.initial_asset.asset_type[:3]}-{ast_count + 1:06d}"
+        asset = InsuredAsset(
+            business_id=ast_business_id,
+            applicant_id=app.id,
+            asset_type=payload.initial_asset.asset_type,
+            identifier=ident,
+            asset_value=payload.initial_asset.asset_value,
+            year_built_or_manufactured=payload.initial_asset.year_built_or_manufactured,
+            make_model=payload.initial_asset.make_model,
+            location_tier=payload.initial_asset.location_tier,
+            details=payload.initial_asset.details or {}
+        )
+        db.add(asset)
+        db.commit()
+        db.refresh(app)
+
     return app
+
+
+@router.post("/{id}/assets", response_model=InsuredAssetResponse, status_code=201)
+def add_applicant_asset(id: int, payload: InsuredAssetCreate, db: Session = Depends(get_db)):
+    applicant = db.query(Applicant).filter(Applicant.id == id).first()
+    if not applicant:
+        raise HTTPException(status_code=404, detail=f"Applicant with ID {id} not found.")
+
+    ast_count = db.query(InsuredAsset).count()
+    ast_business_id = generate_asset_id(ast_count + 1)
+    ident = payload.identifier or f"ID-{payload.asset_type[:3]}-{ast_count + 1:06d}"
+
+    asset = InsuredAsset(
+        business_id=ast_business_id,
+        applicant_id=applicant.id,
+        asset_type=payload.asset_type,
+        identifier=ident,
+        asset_value=payload.asset_value,
+        year_built_or_manufactured=payload.year_built_or_manufactured,
+        make_model=payload.make_model,
+        location_tier=payload.location_tier,
+        details=payload.details or {}
+    )
+    db.add(asset)
+    db.commit()
+    db.refresh(asset)
+    return asset
+
+
+@router.get("/{id}/assets", response_model=List[InsuredAssetResponse])
+def list_applicant_assets(id: int, db: Session = Depends(get_db)):
+    applicant = db.query(Applicant).filter(Applicant.id == id).first()
+    if not applicant:
+        raise HTTPException(status_code=404, detail=f"Applicant with ID {id} not found.")
+    return applicant.assets

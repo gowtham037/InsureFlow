@@ -1,14 +1,16 @@
 from typing import Optional, List, Any
 from datetime import datetime
 from pydantic import BaseModel
+from backend.app.schemas.applicant import InsuredAssetCreate
 
 
 class QuoteCreate(BaseModel):
     applicant_id: int
-    asset_id: int
+    asset_id: Optional[int] = None
     product_id: int
     coverage_amount: float
     deductible: float
+    new_asset: Optional[InsuredAssetCreate] = None
 
 
 class QuoteResponse(BaseModel):
