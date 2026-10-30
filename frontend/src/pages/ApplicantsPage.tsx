@@ -71,12 +71,18 @@ export const ApplicantsPage: React.FC = () => {
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      alert(`Invalid phone number: Must be exactly 10 digits (currently ${phoneDigits.length}).`);
+      return;
+    }
     try {
-      await apiClient.createApplicant(formData);
+      await apiClient.createApplicant({ ...formData, phone: phoneDigits });
       setIsCreateOpen(false);
       fetchApplicants(1, search);
-    } catch (err) {
-      alert('Failed to create applicant. Check field inputs.');
+    } catch (err: any) {
+      const msg = err.response?.data?.detail?.[0]?.msg || err.response?.data?.detail || 'Failed to create applicant. Check field inputs.';
+      alert(typeof msg === 'string' ? msg : JSON.stringify(msg));
     }
   };
 
@@ -343,14 +349,30 @@ export const ApplicantsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Phone</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">
+                Phone Number <span className="text-slate-400 font-normal">(10 digits required)</span>
+              </label>
               <input
                 required
-                type="text"
+                type="tel"
+                placeholder="10-digit phone (e.g. 9876543210)"
+                maxLength={10}
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full text-sm p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500"
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setFormData({ ...formData, phone: cleaned });
+                }}
+                className={`w-full text-sm p-2 border rounded-lg focus:ring-2 focus:ring-brand-500 ${
+                  formData.phone && formData.phone.length !== 10
+                    ? 'border-amber-400 bg-amber-50/40'
+                    : 'border-slate-200'
+                }`}
               />
+              {formData.phone && formData.phone.length !== 10 ? (
+                <p className="text-[11px] text-amber-600 mt-1">
+                  Must be exactly 10 digits ({formData.phone.length}/10 entered)
+                </p>
+              ) : null}
             </div>
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">Date of Birth</label>

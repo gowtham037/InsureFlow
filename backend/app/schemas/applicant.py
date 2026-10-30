@@ -42,8 +42,18 @@ class ApplicantBase(BaseModel):
     claims_count_5yr: int = 0
 
 
+from pydantic import BaseModel, Field, field_validator
+import re
+
+
 class ApplicantCreate(ApplicantBase):
-    pass
+    @field_validator("phone")
+    @classmethod
+    def validate_phone_10_digits(cls, v: str) -> str:
+        digits = re.sub(r"\D", "", v)
+        if len(digits) != 10:
+            raise ValueError("Phone number must contain exactly 10 digits.")
+        return digits
 
 
 class ApplicantResponse(ApplicantBase):

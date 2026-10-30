@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 from fastapi.testclient import TestClient
 from backend.app.main import app
 
@@ -41,6 +42,43 @@ def test_applicants_endpoints():
     data = res.json()
     assert "items" in data
     assert len(data["items"]) <= 10
+
+    # Test phone number validation (must be exactly 10 digits)
+    invalid_short_payload = {
+        "first_name": "Test",
+        "last_name": "User",
+        "email": "test.shortphone@example.com",
+        "phone": "12345678",  # 8 digits -> invalid
+        "date_of_birth": "1990-01-01",
+        "gender": "FEMALE"
+    }
+    res_short = client.post("/api/applicants", json=invalid_short_payload)
+    assert res_short.status_code == 422
+    assert "Phone number must contain exactly 10 digits" in res_short.text
+
+    invalid_long_payload = {
+        "first_name": "Test",
+        "last_name": "User",
+        "email": "test.longphone@example.com",
+        "phone": "123456789012",  # 12 digits -> invalid
+        "date_of_birth": "1990-01-01",
+        "gender": "MALE"
+    }
+    res_long = client.post("/api/applicants", json=invalid_long_payload)
+    assert res_long.status_code == 422
+    assert "Phone number must contain exactly 10 digits" in res_long.text
+
+    valid_payload = {
+        "first_name": "Test",
+        "last_name": "ValidPhone",
+        "email": f"test.validphone.{int(datetime.now().timestamp())}@example.com",
+        "phone": "9876543210",  # exactly 10 digits -> valid
+        "date_of_birth": "1990-01-01",
+        "gender": "NON_BINARY"
+    }
+    res_valid = client.post("/api/applicants", json=valid_payload)
+    assert res_valid.status_code == 201
+    assert res_valid.json()["phone"] == "9876543210"
 
 
 def test_products_endpoints():
