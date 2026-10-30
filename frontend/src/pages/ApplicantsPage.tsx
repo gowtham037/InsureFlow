@@ -375,6 +375,19 @@ export const ApplicantsPage: React.FC = () => {
               />
             </div>
             <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Gender</label>
+              <select
+                required
+                value={formData.gender}
+                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                className="w-full text-sm p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 bg-white"
+              >
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="NON_BINARY">Non-Binary</option>
+              </select>
+            </div>
+            <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">Annual Income ($)</label>
               <input
                 required
@@ -385,8 +398,19 @@ export const ApplicantsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">City & State</label>
-              <div className="grid grid-cols-2 gap-2">
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Street Address</label>
+              <input
+                required
+                type="text"
+                placeholder="123 Main Street"
+                value={formData.address_line}
+                onChange={(e) => setFormData({ ...formData, address_line: e.target.value })}
+                className="w-full text-sm p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">City, State & Postal Code</label>
+              <div className="grid grid-cols-3 gap-2">
                 <input
                   required
                   placeholder="City"
@@ -403,7 +427,38 @@ export const ApplicantsPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                   className="w-full text-sm p-2 border border-slate-200 rounded-lg"
                 />
+                <input
+                  required
+                  placeholder="ZIP Code"
+                  type="text"
+                  value={formData.postal_code}
+                  onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                  className="w-full text-sm p-2 border border-slate-200 rounded-lg"
+                />
               </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Employment Status</label>
+              <select
+                value={formData.employment_status}
+                onChange={(e) => setFormData({ ...formData, employment_status: e.target.value })}
+                className="w-full text-sm p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 bg-white"
+              >
+                <option value="EMPLOYED">Employed</option>
+                <option value="SELF_EMPLOYED">Self-Employed</option>
+                <option value="RETIRED">Retired</option>
+                <option value="UNEMPLOYED">Unemployed</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Occupation</label>
+              <input
+                type="text"
+                placeholder="e.g. Engineer, Teacher, Consultant"
+                value={formData.occupation}
+                onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+                className="w-full text-sm p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500"
+              />
             </div>
           </div>
 
