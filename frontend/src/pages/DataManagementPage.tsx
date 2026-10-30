@@ -45,6 +45,11 @@ export const DataManagementPage: React.FC = () => {
   }, []);
 
   const handleGenerate = async (mode: 'starter' | 'full') => {
+    const confirmed = window.confirm(
+      `⚠️ Re-generating the synthetic dataset will reset the database and re-seed all 15 relational tables to the deterministic benchmark (Seed: 20261022).\n\nAny manually created test applicants or quotes will be replaced with the standard benchmark records.\n\nDo you want to proceed with generating the ${mode.toUpperCase()} dataset?`
+    );
+    if (!confirmed) return;
+
     setIsGenerating(true);
     setGenMessage(`Generating ${mode} synthetic dataset (Seed: 20261022)... This process generates relational records across all 15 entities.`);
     try {
@@ -173,10 +178,14 @@ export const DataManagementPage: React.FC = () => {
                   Seed: 20261022
                 </span>
               </div>
-              <p className="text-xs text-slate-500 leading-relaxed mb-6">
+              <p className="text-xs text-slate-500 leading-relaxed mb-3">
                 Generates realistic, actuarially grounded records adhering to product eligibility, transparent pricing formulas,
                 risk scoring, underwriting rules and policy lifecycle conditions.
               </p>
+              <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200/80 text-[11px] text-amber-800 flex items-start gap-2 mb-4">
+                <span className="font-bold text-amber-900 shrink-0">Deterministic Benchmark:</span>
+                <span>Re-generating resets and re-seeds the database to the benchmark baseline (Seed: 20261022) to guarantee reproducible audit checksums.</span>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-slate-100">
