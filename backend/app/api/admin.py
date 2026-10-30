@@ -8,6 +8,7 @@ from typing import Dict, Any
 from pydantic import BaseModel
 
 from backend.app.database import get_db, SessionLocal
+from backend.app.models.base import RecordSource
 from backend.app.models.applicant import Applicant
 from backend.app.models.quote import Quote
 from backend.app.models.policy import Policy
@@ -79,12 +80,26 @@ def trigger_generation(
 @router.get("/generation-status")
 def get_status(db: Session = Depends(get_db)):
     baseline_policies = db.query(Policy).filter(Policy.is_baseline == True).count()
+    user_policies = db.query(Policy).filter(Policy.record_source == RecordSource.USER).count()
     total_policies = db.query(Policy).count()
 
+    total_applicants = db.query(Applicant).count()
+    user_applicants = db.query(Applicant).filter(Applicant.record_source == RecordSource.USER).count()
+    baseline_applicants = total_applicants - user_applicants
+
+    total_quotes = db.query(Quote).count()
+    user_quotes = db.query(Quote).filter(Quote.record_source == RecordSource.USER).count()
+    baseline_quotes = db.query(Quote).filter(Quote.is_baseline == True).count()
+
     return {
-        "applicants": db.query(Applicant).count(),
-        "quotes": db.query(Quote).count(),
+        "applicants": total_applicants,
+        "baseline_applicants": baseline_applicants,
+        "user_applicants": user_applicants,
+        "quotes": total_quotes,
+        "baseline_quotes": baseline_quotes,
+        "user_quotes": user_quotes,
         "baseline_policies": baseline_policies,
+        "user_policies": user_policies,
         "policies": total_policies,
         "renewals": db.query(Renewal).count(),
         "endorsements": db.query(Endorsement).count(),

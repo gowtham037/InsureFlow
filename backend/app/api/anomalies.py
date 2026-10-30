@@ -44,6 +44,11 @@ def get_anomalies_summary(db: Session = Depends(get_db)):
     )
 
 
+@router.get("/metrics")
+def get_anomalies_metrics(db: Session = Depends(get_db)):
+    return evaluate_anomaly_metrics(db)
+
+
 @router.get("/{id}", response_model=AnomalyResponse)
 def get_anomaly(id: int, db: Session = Depends(get_db)):
     anm = db.query(AnomalyRecord).filter(AnomalyRecord.id == id).first()

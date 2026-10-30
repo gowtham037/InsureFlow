@@ -20,6 +20,9 @@ class RenewalResponse(BaseModel):
     effective_date: date
     expiration_date: date
     decision_reason: Optional[str] = None
+    is_baseline: Optional[bool] = False
+    record_source: Optional[str] = "USER"
+    source: Optional[str] = None
     created_at: datetime
 
     class Config:

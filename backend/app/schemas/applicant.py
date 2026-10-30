@@ -1,6 +1,7 @@
 from typing import Optional, List, Any
 from datetime import date, datetime
-from pydantic import BaseModel, Field
+import re
+from pydantic import BaseModel, Field, field_validator
 
 
 class InsuredAssetBase(BaseModel):
@@ -11,12 +12,15 @@ class InsuredAssetBase(BaseModel):
     make_model: str
     location_tier: str
     details: Optional[dict] = None
+    record_source: Optional[str] = "USER"
 
 
 class InsuredAssetResponse(InsuredAssetBase):
     id: int
     business_id: str
     applicant_id: int
+    record_source: Optional[str] = "USER"
+    source: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -29,21 +33,18 @@ class ApplicantBase(BaseModel):
     email: str
     phone: str
     date_of_birth: date
-    gender: str
-    address_line: str
-    city: str
-    state: str
-    postal_code: str
+    gender: str = "NON_BINARY"
+    address_line: str = "100 Main Street"
+    city: str = "Austin"
+    state: str = "TX"
+    postal_code: str = "78701"
     country: str = "USA"
-    annual_income: float
-    credit_score: int
-    occupation: str
-    employment_status: str
+    annual_income: float = 75000.0
+    credit_score: int = 700
+    occupation: str = "Professional"
+    employment_status: str = "EMPLOYED"
     claims_count_5yr: int = 0
-
-
-from pydantic import BaseModel, Field, field_validator
-import re
+    record_source: Optional[str] = "USER"
 
 
 class InsuredAssetCreate(BaseModel):
@@ -72,6 +73,8 @@ class ApplicantResponse(ApplicantBase):
     id: int
     business_id: str
     age: int
+    record_source: Optional[str] = "USER"
+    source: Optional[str] = None
     created_at: datetime
     assets: List[InsuredAssetResponse] = []
 

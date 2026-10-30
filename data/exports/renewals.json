@@ -15598,18 +15598,5 @@
     "expiration_date": "2028-02-05",
     "decision_reason": "Standard renewal cycle 2027 offer (4.0% rate revision).",
     "is_baseline": true
-  },
-  {
-    "business_id": "REN-POL-2026-990004-2027",
-    "previous_policy_id": "POL-2026-990004",
-    "renewal_cycle_year": 2027,
-    "status": "OFFERED",
-    "prior_premium": 2910.3,
-    "renewal_premium": 3055.82,
-    "premium_change_percent": 5.0,
-    "effective_date": "2027-06-24",
-    "expiration_date": "2028-06-23",
-    "decision_reason": "Renewal offer generated improperly for cancelled policy",
-    "is_baseline": false
   }
 ]

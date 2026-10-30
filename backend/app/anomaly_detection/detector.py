@@ -17,7 +17,7 @@ def run_anomaly_detection(db: Session) -> List[AnomalyRecord]:
     """
     # Clear previous detection records
     db.query(AnomalyRecord).delete()
-    db.commit()
+    db.flush()
 
     detected_anomalies: List[AnomalyRecord] = []
     counter = 1
@@ -217,5 +217,5 @@ def run_anomaly_detection(db: Session) -> List[AnomalyRecord]:
                         db.add(rec)
                         counter += 1
 
-    db.commit()
+    db.flush()
     return detected_anomalies

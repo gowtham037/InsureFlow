@@ -2,10 +2,10 @@ from datetime import date
 from sqlalchemy import Column, Integer, String, Numeric, Text, ForeignKey, Date, Boolean
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
-from backend.app.models.base import TimestampMixin
+from backend.app.models.base import TimestampMixin, RecordSourceMixin
 
 
-class Endorsement(Base, TimestampMixin):
+class Endorsement(Base, TimestampMixin, RecordSourceMixin):
     __tablename__ = "endorsements"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -21,6 +21,6 @@ class Endorsement(Base, TimestampMixin):
     premium_delta = Column(Numeric(10, 2), nullable=False)
     status = Column(String(30), default="APPLIED", nullable=False)  # APPROVED, APPLIED, REJECTED
     reason = Column(Text, nullable=False)
-    is_baseline = Column(Boolean, default=True, nullable=False)
+    is_baseline = Column(Boolean, default=False, nullable=False)
 
     policy = relationship("Policy", back_populates="endorsements")

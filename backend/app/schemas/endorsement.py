@@ -25,6 +25,9 @@ class EndorsementResponse(BaseModel):
     premium_delta: float
     status: str
     reason: str
+    is_baseline: Optional[bool] = False
+    record_source: Optional[str] = "USER"
+    source: Optional[str] = None
     created_at: datetime
 
     class Config:

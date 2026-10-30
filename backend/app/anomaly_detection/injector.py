@@ -14,6 +14,7 @@ from backend.app.models.asset import InsuredAsset
 from backend.app.models.anomaly import AnomalyRecord
 from backend.app.rules.pricing import calculate_premium
 from backend.app.utils.sequence import generate_anomaly_id, generate_endorsement_id, generate_renewal_id
+from backend.app.models.base import RecordSource
 
 
 def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
@@ -23,27 +24,28 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
     
     CRITICAL DESIGN REQUIREMENT:
     Keeps the 2,000 valid baseline policies 100% intact and separate by tagging
-    deliberately injected negative records with `is_baseline = False`.
-    Each anomaly scenario uses distinct, dedicated unassigned assets so that
-    no unintended side-effect anomalies (such as unwanted period overlaps or pricing deltas)
-    are triggered.
+    deliberately injected negative records with `is_baseline = False` and `record_source = INJECTED`.
+    User-created records are never touched.
     """
     ground_truth_records = []
     anomaly_counter = 1
 
     # Clean up previous non-baseline injected records if any exist
-    db.query(Endorsement).filter(Endorsement.is_baseline == False).delete()
-    db.query(Renewal).filter(Renewal.is_baseline == False).delete()
-    db.query(Policy).filter(Policy.is_baseline == False).delete()
-    db.query(Quote).filter(Quote.is_baseline == False).delete()
+    db.query(Endorsement).filter(Endorsement.record_source == RecordSource.INJECTED).delete()
+    db.query(Renewal).filter(Renewal.record_source == RecordSource.INJECTED).delete()
+    db.query(Policy).filter(Policy.record_source == RecordSource.INJECTED).delete()
+    db.query(Quote).filter(Quote.record_source == RecordSource.INJECTED).delete()
     db.query(AnomalyRecord).delete()
-    db.commit()
+    db.flush()
 
     # Find assets that do NOT currently have active policies attached
     active_policy_asset_ids = set(
         r[0] for r in db.query(Policy.asset_id).filter(Policy.status.in_(["ISSUED", "ACTIVE"])).all()
     )
-    free_assets = db.query(InsuredAsset).filter(~InsuredAsset.id.in_(active_policy_asset_ids)).all()
+    free_assets = db.query(InsuredAsset).filter(
+        ~InsuredAsset.id.in_(active_policy_asset_ids),
+        InsuredAsset.record_source == RecordSource.GENERATED
+    ).all()
     if len(free_assets) < 5:
         # Fallback to distinct assets
         free_assets = db.query(InsuredAsset).order_by(InsuredAsset.id.desc()).limit(10).all()
@@ -90,7 +92,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         customer_accepted=False,  # Unaccepted
         customer_accepted_at=None,
         expires_at=datetime(2026, 11, 22),
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm1_quote)
     db.flush()
@@ -112,7 +115,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         expiration_date=today + timedelta(days=365),
         cancellation_date=None,
         cancellation_reason=None,
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm1_policy)
     db.flush()
@@ -172,7 +176,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         customer_accepted=True,
         customer_accepted_at=datetime(2026, 10, 15),
         expires_at=datetime(2026, 11, 15),
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm2_quote)
     db.flush()
@@ -192,7 +197,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         customer_accepted=True,
         effective_date=today,
         expiration_date=today + timedelta(days=365),
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm2_policy)
     db.flush()
@@ -251,7 +257,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         customer_accepted=True,
         customer_accepted_at=datetime(2026, 9, 1),
         expires_at=datetime(2026, 10, 1),
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm3_quote)
     db.flush()
@@ -271,7 +278,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         customer_accepted=True,
         effective_date=today,
         expiration_date=today + timedelta(days=365),
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm3_policy)
     db.flush()
@@ -293,7 +301,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         premium_delta=float(anm3_policy.annual_premium) * 1.0,
         status="APPLIED",
         reason="Requested coverage increase exceeding allowed underwriting product limits",
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(excess_endorsement)
     db.flush()
@@ -352,7 +361,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         customer_accepted=True,
         customer_accepted_at=datetime(2026, 9, 1),
         expires_at=datetime(2026, 10, 1),
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm4_quote)
     db.flush()
@@ -374,7 +384,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         expiration_date=today + timedelta(days=245),
         cancellation_date=today - timedelta(days=30),
         cancellation_reason="Customer relocation cancellation",
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm4_policy)
     db.flush()
@@ -392,7 +403,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         effective_date=anm4_policy.expiration_date,
         expiration_date=anm4_policy.expiration_date + timedelta(days=365),
         decision_reason="Renewal offer generated improperly for cancelled policy",
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(invalid_renewal)
     db.flush()
@@ -451,7 +463,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         customer_accepted=True,
         customer_accepted_at=datetime(2026, 9, 15),
         expires_at=datetime(2026, 10, 15),
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm5_base_qte)
     db.flush()
@@ -470,7 +483,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         customer_accepted=True,
         effective_date=today,
         expiration_date=today + timedelta(days=365),
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm5_base_pol)
     db.flush()
@@ -492,7 +506,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         customer_accepted=True,
         customer_accepted_at=datetime(2026, 10, 1),
         expires_at=datetime(2026, 11, 1),
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(anm5_overlap_qte)
     db.flush()
@@ -512,7 +527,8 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
         customer_accepted=True,
         effective_date=today + timedelta(days=15),
         expiration_date=today + timedelta(days=380),
-        is_baseline=False
+        is_baseline=False,
+        record_source=RecordSource.INJECTED
     )
     db.add(overlap_policy)
     db.flush()
@@ -530,7 +546,7 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
     }
     ground_truth_records.append(anm_5)
 
-    db.commit()
+    db.flush()
 
     # Save to independent ground truth files
     export_ground_truth(ground_truth_records)

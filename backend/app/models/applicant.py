@@ -2,10 +2,10 @@ from datetime import datetime, date
 from sqlalchemy import Column, Integer, String, Numeric, Date, DateTime, JSON
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
-from backend.app.models.base import TimestampMixin
+from backend.app.models.base import TimestampMixin, RecordSourceMixin
 
 
-class Applicant(Base, TimestampMixin):
+class Applicant(Base, TimestampMixin, RecordSourceMixin):
     __tablename__ = "applicants"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)

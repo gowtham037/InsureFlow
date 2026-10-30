@@ -5,6 +5,7 @@ import hashlib
 from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 
+from backend.app.models.base import RecordSource
 from backend.app.models.applicant import Applicant
 from backend.app.models.asset import InsuredAsset
 from backend.app.models.product import Product, CoverageOption
@@ -26,8 +27,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     os.makedirs(export_dir, exist_ok=True)
     summary: Dict[str, Any] = {"counts": {}, "checksums": {}}
 
-    # 1. Applicants
-    applicants = db.query(Applicant).order_by(Applicant.id).all()
+    # 1. Applicants (Baseline Generated)
+    applicants = db.query(Applicant).filter(Applicant.record_source == RecordSource.GENERATED).order_by(Applicant.id).all()
+    if not applicants:
+        applicants = db.query(Applicant).order_by(Applicant.id).all()
     app_data = [{
         "business_id": a.business_id,
         "first_name": a.first_name,
@@ -49,8 +52,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     _write_json_and_csv(app_data, export_dir, "applicants")
     summary["counts"]["applicants"] = len(app_data)
 
-    # 2. Insured Assets
-    assets = db.query(InsuredAsset).order_by(InsuredAsset.id).all()
+    # 2. Insured Assets (Baseline Generated)
+    assets = db.query(InsuredAsset).filter(InsuredAsset.record_source == RecordSource.GENERATED).order_by(InsuredAsset.id).all()
+    if not assets:
+        assets = db.query(InsuredAsset).order_by(InsuredAsset.id).all()
     asset_data = [{
         "business_id": a.business_id,
         "applicant_id": a.applicant.business_id if a.applicant else None,
@@ -110,8 +115,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     _write_json_and_csv(rf_data, export_dir, "risk_factors")
     summary["counts"]["risk_factors"] = len(rf_data)
 
-    # 6. Quotes
-    quotes = db.query(Quote).order_by(Quote.id).all()
+    # 6. Quotes (Baseline Generated)
+    quotes = db.query(Quote).filter(Quote.is_baseline == True).order_by(Quote.id).all()
+    if not quotes:
+        quotes = db.query(Quote).order_by(Quote.id).all()
     quote_data = [{
         "business_id": q.business_id,
         "applicant_id": q.applicant.business_id if q.applicant else None,
@@ -131,8 +138,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     _write_json_and_csv(quote_data, export_dir, "quotes")
     summary["counts"]["quotes"] = len(quote_data)
 
-    # 7. Quote Coverages
-    quote_coverages = db.query(QuoteCoverage).order_by(QuoteCoverage.id).all()
+    # 7. Quote Coverages (Baseline Generated)
+    quote_coverages = db.query(QuoteCoverage).join(Quote).filter(Quote.is_baseline == True).order_by(QuoteCoverage.id).all()
+    if not quote_coverages:
+        quote_coverages = db.query(QuoteCoverage).order_by(QuoteCoverage.id).all()
     qc_data = [{
         "quote_business_id": qc.quote.business_id if qc.quote else None,
         "coverage_option_code": qc.coverage_option.code if qc.coverage_option else None,
@@ -143,8 +152,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     _write_json_and_csv(qc_data, export_dir, "quote_coverages")
     summary["counts"]["quote_coverages"] = len(qc_data)
 
-    # 8. Underwriting Decisions
-    uw_decisions = db.query(UnderwritingDecision).order_by(UnderwritingDecision.id).all()
+    # 8. Underwriting Decisions (Baseline Generated)
+    uw_decisions = db.query(UnderwritingDecision).join(Quote).filter(Quote.is_baseline == True).order_by(UnderwritingDecision.id).all()
+    if not uw_decisions:
+        uw_decisions = db.query(UnderwritingDecision).order_by(UnderwritingDecision.id).all()
     dec_data = [{
         "business_id": d.business_id,
         "quote_business_id": d.quote.business_id if d.quote else None,
@@ -157,8 +168,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     _write_json_and_csv(dec_data, export_dir, "underwriting_decisions")
     summary["counts"]["underwriting_decisions"] = len(dec_data)
 
-    # 9. Policies
-    policies = db.query(Policy).order_by(Policy.id).all()
+    # 9. Policies (Baseline Generated)
+    policies = db.query(Policy).filter(Policy.is_baseline == True).order_by(Policy.id).all()
+    if not policies:
+        policies = db.query(Policy).order_by(Policy.id).all()
     policy_data = [{
         "business_id": p.business_id,
         "quote_id": p.quote.business_id if p.quote else None,
@@ -179,8 +192,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     _write_json_and_csv(policy_data, export_dir, "policies")
     summary["counts"]["policies"] = len(policy_data)
 
-    # 10. Policy Coverages
-    pol_coverages = db.query(PolicyCoverage).order_by(PolicyCoverage.id).all()
+    # 10. Policy Coverages (Baseline Generated)
+    pol_coverages = db.query(PolicyCoverage).join(Policy).filter(Policy.is_baseline == True).order_by(PolicyCoverage.id).all()
+    if not pol_coverages:
+        pol_coverages = db.query(PolicyCoverage).order_by(PolicyCoverage.id).all()
     pc_data = [{
         "policy_business_id": pc.policy.business_id if pc.policy else None,
         "coverage_option_code": pc.coverage_option.code if pc.coverage_option else None,
@@ -191,8 +206,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     _write_json_and_csv(pc_data, export_dir, "policy_coverages")
     summary["counts"]["policy_coverages"] = len(pc_data)
 
-    # 11. Endorsements
-    endorsements = db.query(Endorsement).order_by(Endorsement.id).all()
+    # 11. Endorsements (Baseline Generated)
+    endorsements = db.query(Endorsement).filter(Endorsement.is_baseline == True).order_by(Endorsement.id).all()
+    if not endorsements:
+        endorsements = db.query(Endorsement).order_by(Endorsement.id).all()
     end_data = [{
         "business_id": e.business_id,
         "policy_business_id": e.policy.business_id if e.policy else None,
@@ -211,8 +228,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     _write_json_and_csv(end_data, export_dir, "endorsements")
     summary["counts"]["endorsements"] = len(end_data)
 
-    # 12. Renewals
-    renewals = db.query(Renewal).order_by(Renewal.id).all()
+    # 12. Renewals (Baseline Generated)
+    renewals = db.query(Renewal).filter(Renewal.is_baseline == True).order_by(Renewal.id).all()
+    if not renewals:
+        renewals = db.query(Renewal).order_by(Renewal.id).all()
     ren_data = [{
         "business_id": r.business_id,
         "previous_policy_id": r.previous_policy.business_id if r.previous_policy else None,
@@ -229,8 +248,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     _write_json_and_csv(ren_data, export_dir, "renewals")
     summary["counts"]["renewals"] = len(ren_data)
 
-    # 13. Policy Events
-    events = db.query(PolicyEvent).order_by(PolicyEvent.id).all()
+    # 13. Policy Events (Baseline Generated)
+    events = db.query(PolicyEvent).join(Policy).filter(Policy.is_baseline == True).order_by(PolicyEvent.id).all()
+    if not events:
+        events = db.query(PolicyEvent).order_by(PolicyEvent.id).all()
     event_data = [{
         "policy_business_id": ev.policy.business_id if ev.policy else None,
         "event_type": ev.event_type,

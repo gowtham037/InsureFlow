@@ -9,6 +9,8 @@ import numpy as np
 from sqlalchemy.orm import Session
 
 from backend.app.database import engine, SessionLocal, init_db, Base
+from backend.app.models.base import RecordSource
+from backend.app.models.anomaly import AnomalyRecord
 from backend.app.models.applicant import Applicant
 from backend.app.models.asset import InsuredAsset
 from backend.app.models.product import Product, CoverageOption
@@ -89,84 +91,111 @@ def generate_dataset(
         close_session_at_end = True
 
     try:
-        # Wipe existing data in order of foreign keys
-        db.query(Endorsement).delete()
-        db.query(Renewal).delete()
-        db.query(PolicyEvent).delete()
-        db.query(PolicyCoverage).delete()
-        db.query(Policy).delete()
-        db.query(UnderwritingDecision).delete()
-        db.query(QuoteCoverage).delete()
-        db.query(Quote).delete()
-        db.query(ApplicantRiskFactor).delete()
-        db.query(AssetRiskFactor).delete()
-        db.query(InsuredAsset).delete()
-        db.query(Applicant).delete()
-        db.query(CoverageOption).delete()
-        db.query(Product).delete()
-        db.query(RiskFactor).delete()
-        db.commit()
+        # Selectively remove ONLY previous non-user generated and injected records
+        # User-created records (RecordSource.USER) and audit logs are strictly preserved
+        logger.info("Cleaning up previous generated and injected records (preserving USER records and audit logs)...")
+        db.query(AnomalyRecord).delete(synchronize_session=False)
+
+        db.query(Endorsement).filter(Endorsement.record_source != RecordSource.USER).delete(synchronize_session=False)
+        db.query(Renewal).filter(Renewal.record_source != RecordSource.USER).delete(synchronize_session=False)
+
+        non_user_pol_ids = [p[0] for p in db.query(Policy.id).filter(Policy.record_source != RecordSource.USER).all()]
+        if non_user_pol_ids:
+            db.query(PolicyEvent).filter(PolicyEvent.policy_id.in_(non_user_pol_ids)).delete(synchronize_session=False)
+            db.query(PolicyCoverage).filter(PolicyCoverage.policy_id.in_(non_user_pol_ids)).delete(synchronize_session=False)
+            db.query(Policy).filter(Policy.id.in_(non_user_pol_ids)).delete(synchronize_session=False)
+
+        non_user_q_ids = [q[0] for q in db.query(Quote.id).filter(Quote.record_source != RecordSource.USER).all()]
+        if non_user_q_ids:
+            db.query(UnderwritingDecision).filter(UnderwritingDecision.quote_id.in_(non_user_q_ids)).delete(synchronize_session=False)
+            db.query(QuoteCoverage).filter(QuoteCoverage.quote_id.in_(non_user_q_ids)).delete(synchronize_session=False)
+            db.query(Quote).filter(Quote.id.in_(non_user_q_ids)).delete(synchronize_session=False)
+        db.query(UnderwritingDecision).filter(UnderwritingDecision.record_source != RecordSource.USER).delete(synchronize_session=False)
+
+        non_user_ast_ids = [a[0] for a in db.query(InsuredAsset.id).filter(InsuredAsset.record_source != RecordSource.USER).all()]
+        if non_user_ast_ids:
+            db.query(AssetRiskFactor).filter(AssetRiskFactor.asset_id.in_(non_user_ast_ids)).delete(synchronize_session=False)
+            db.query(InsuredAsset).filter(InsuredAsset.id.in_(non_user_ast_ids)).delete(synchronize_session=False)
+
+        non_user_app_ids = [a[0] for a in db.query(Applicant.id).filter(Applicant.record_source != RecordSource.USER).all()]
+        if non_user_app_ids:
+            db.query(ApplicantRiskFactor).filter(ApplicantRiskFactor.applicant_id.in_(non_user_app_ids)).delete(synchronize_session=False)
+            db.query(Applicant).filter(Applicant.id.in_(non_user_app_ids)).delete(synchronize_session=False)
+
+        db.flush()
 
         # -------------------------------------------------------------
-        # 1 & 2. Products and CoverageOptions
+        # 1 & 2. Products and CoverageOptions (Preserve Reference Master Data)
         # -------------------------------------------------------------
-        logger.info("Generating Products and CoverageOptions...")
-        product_records = []
-        coverage_map = {}
-        for p_def in PRODUCT_DEFINITIONS:
-            prod = Product(
-                product_code=p_def["product_code"],
-                name=p_def["name"],
-                line_of_business=p_def["line_of_business"],
-                description=p_def["description"],
-                min_coverage_limit=p_def["min_coverage_limit"],
-                max_coverage_limit=p_def["max_coverage_limit"],
-                min_applicant_age=p_def["min_applicant_age"],
-                max_applicant_age=p_def["max_applicant_age"],
-                base_premium=p_def["base_premium"],
-                is_active=True
-            )
-            db.add(prod)
-            db.flush()
-            product_records.append(prod)
-
-            cov_list = []
-            for c_def in p_def["coverages"]:
-                cov = CoverageOption(
-                    product_id=prod.id,
-                    code=c_def["code"],
-                    name=c_def["name"],
-                    description=f"{c_def['name']} coverage under {prod.name}",
-                    coverage_category=c_def["category"],
-                    default_limit=c_def["default_limit"],
-                    min_limit=c_def["min_limit"],
-                    max_limit=c_def["max_limit"],
-                    premium_multiplier=c_def["premium_multiplier"],
-                    deductible_options=c_def["deductibles"]
+        existing_products = db.query(Product).order_by(Product.id).all()
+        if existing_products:
+            logger.info("Using existing Products and CoverageOptions master catalog...")
+            product_records = existing_products
+            coverage_map = {}
+            for prod in product_records:
+                coverage_map[prod.id] = db.query(CoverageOption).filter(CoverageOption.product_id == prod.id).order_by(CoverageOption.id).all()
+        else:
+            logger.info("Generating Products and CoverageOptions...")
+            product_records = []
+            coverage_map = {}
+            for p_def in PRODUCT_DEFINITIONS:
+                prod = Product(
+                    product_code=p_def["product_code"],
+                    name=p_def["name"],
+                    line_of_business=p_def["line_of_business"],
+                    description=p_def["description"],
+                    min_coverage_limit=p_def["min_coverage_limit"],
+                    max_coverage_limit=p_def["max_coverage_limit"],
+                    min_applicant_age=p_def["min_applicant_age"],
+                    max_applicant_age=p_def["max_applicant_age"],
+                    base_premium=p_def["base_premium"],
+                    is_active=True
                 )
-                db.add(cov)
-                cov_list.append(cov)
-            coverage_map[prod.id] = cov_list
+                db.add(prod)
+                db.flush()
+                product_records.append(prod)
 
-        db.commit()
+                cov_list = []
+                for c_def in p_def["coverages"]:
+                    cov = CoverageOption(
+                        product_id=prod.id,
+                        code=c_def["code"],
+                        name=c_def["name"],
+                        description=f"{c_def['name']} coverage under {prod.name}",
+                        coverage_category=c_def["category"],
+                        default_limit=c_def["default_limit"],
+                        min_limit=c_def["min_limit"],
+                        max_limit=c_def["max_limit"],
+                        premium_multiplier=c_def["premium_multiplier"],
+                        deductible_options=c_def["deductibles"]
+                    )
+                    db.add(cov)
+                    cov_list.append(cov)
+                coverage_map[prod.id] = cov_list
+            db.flush()
 
         # -------------------------------------------------------------
-        # 3. RiskFactors
+        # 3. RiskFactors (Preserve Reference Master Data)
         # -------------------------------------------------------------
-        logger.info("Generating RiskFactors...")
-        rf_records = []
-        for rf_def in RISK_FACTOR_DEFINITIONS:
-            rf = RiskFactor(
-                factor_code=rf_def["factor_code"],
-                category=rf_def["category"],
-                name=rf_def["name"],
-                description=f"Risk factor: {rf_def['name']}",
-                base_score_impact=rf_def["base_score_impact"],
-                premium_multiplier=rf_def["premium_multiplier"]
-            )
-            db.add(rf)
-            rf_records.append(rf)
-        db.commit()
+        existing_rfs = db.query(RiskFactor).order_by(RiskFactor.id).all()
+        if existing_rfs:
+            logger.info("Using existing RiskFactors master catalog...")
+            rf_records = existing_rfs
+        else:
+            logger.info("Generating RiskFactors...")
+            rf_records = []
+            for rf_def in RISK_FACTOR_DEFINITIONS:
+                rf = RiskFactor(
+                    factor_code=rf_def["factor_code"],
+                    category=rf_def["category"],
+                    name=rf_def["name"],
+                    description=f"Risk factor: {rf_def['name']}",
+                    base_score_impact=rf_def["base_score_impact"],
+                    premium_multiplier=rf_def["premium_multiplier"]
+                )
+                db.add(rf)
+                rf_records.append(rf)
+            db.flush()
 
         # -------------------------------------------------------------
         # 4. Applicants
@@ -226,12 +255,13 @@ def generate_dataset(
                 occupation=random.choice(occupations),
                 employment_status="EMPLOYED" if age < 65 else "RETIRED",
                 claims_count_5yr=claims,
-                metadata_json={"preferred_contact": "EMAIL", "preferred_language": "EN"}
+                metadata_json={"preferred_contact": "EMAIL", "preferred_language": "EN"},
+                record_source=RecordSource.GENERATED
             )
             db.add(applicant)
             applicants.append(applicant)
 
-        db.commit()
+        db.flush()
 
         # -------------------------------------------------------------
         # 5. InsuredAssets
@@ -299,12 +329,13 @@ def generate_dataset(
                     year_built_or_manufactured=year_mfg,
                     make_model=make_model,
                     location_tier=loc_tier,
-                    details=details
+                    details=details,
+                    record_source=RecordSource.GENERATED
                 )
                 db.add(asset)
                 assets.append(asset)
 
-        db.commit()
+        db.flush()
 
         # Group assets by product compatibility
         motor_prod = next(p for p in product_records if p.line_of_business == "MOTOR")
@@ -420,7 +451,9 @@ def generate_dataset(
                 pricing_explanation=explanation,
                 customer_accepted=customer_accepted,
                 customer_accepted_at=customer_accepted_at,
-                expires_at=datetime.utcnow() + timedelta(days=30)
+                expires_at=datetime.utcnow() + timedelta(days=30),
+                is_baseline=True,
+                record_source=RecordSource.GENERATED
             )
             db.add(quote)
             db.flush()
@@ -436,7 +469,8 @@ def generate_dataset(
                 rule_identifiers=rule_ids,
                 reviewer_name=reviewer,
                 reviewed_at=datetime.utcnow() - timedelta(days=random.randint(10, 200)),
-                is_override=False
+                is_override=False,
+                record_source=RecordSource.GENERATED
             )
             db.add(dec)
 
@@ -509,7 +543,9 @@ def generate_dataset(
                 effective_date=eff_date,
                 expiration_date=exp_date,
                 cancellation_date=None,
-                cancellation_reason=None
+                cancellation_reason=None,
+                is_baseline=True,
+                record_source=RecordSource.GENERATED
             )
             db.add(policy)
             db.flush()
@@ -521,7 +557,8 @@ def generate_dataset(
                 event_description=f"Policy {pol_id} issued upon customer acceptance and premium payment confirmation.",
                 actor="System Underwriting Engine",
                 metadata_json={"payment_amount": float(q.final_premium), "status": "PAID"},
-                created_at=datetime.combine(eff_date, datetime.min.time())
+                created_at=datetime.combine(eff_date, datetime.min.time()),
+                record_source=RecordSource.GENERATED
             )
             db.add(ev1)
             policies.append(policy)
@@ -539,7 +576,7 @@ def generate_dataset(
                 )
                 db.add(pc)
 
-        db.commit()
+        db.flush()
 
         # -------------------------------------------------------------
         # 9. Endorsements
@@ -573,12 +610,14 @@ def generate_dataset(
                 new_premium=new_prem,
                 premium_delta=delta,
                 status="APPLIED",
-                reason="Mid-term endorsement: Adjust policy coverage limit and premium"
+                reason="Mid-term endorsement: Adjust policy coverage limit and premium",
+                is_baseline=True,
+                record_source=RecordSource.GENERATED
             )
             db.add(endorsement)
             endorsements.append(endorsement)
 
-        db.commit()
+        db.flush()
 
         # -------------------------------------------------------------
         # 10. Renewals
@@ -618,12 +657,14 @@ def generate_dataset(
                 premium_change_percent=change_pct,
                 effective_date=pol.expiration_date + timedelta(days=365 * cycle_offset),
                 expiration_date=pol.expiration_date + timedelta(days=365 * (cycle_offset + 1)),
-                decision_reason=f"Standard renewal cycle {ren_year} offer ({change_pct}% rate revision)."
+                decision_reason=f"Standard renewal cycle {ren_year} offer ({change_pct}% rate revision).",
+                is_baseline=True,
+                record_source=RecordSource.GENERATED
             )
             db.add(renewal)
             renewals.append(renewal)
 
-        db.commit()
+        db.flush()
 
         # -------------------------------------------------------------
         # Injected Negative Anomaly Scenarios & Detection
@@ -637,6 +678,9 @@ def generate_dataset(
         # Export dataset to CSV and JSON
         logger.info("Exporting generated dataset to data/exports/...")
         export_summary = export_dataset_to_files(db)
+
+        # Commit entire generation transaction atomically
+        db.commit()
 
         summary = {
             "mode": mode,
@@ -657,6 +701,10 @@ def generate_dataset(
         logger.info(f"Dataset generation complete: {summary['counts']}")
         return summary
 
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Dataset generation failed: {e}", exc_info=True)
+        raise
     finally:
         if close_session_at_end:
             db.close()

@@ -32,6 +32,9 @@ class PolicyResponse(BaseModel):
     expiration_date: date
     cancellation_date: Optional[date] = None
     cancellation_reason: Optional[str] = None
+    is_baseline: Optional[bool] = False
+    record_source: Optional[str] = "USER"
+    source: Optional[str] = None
     created_at: datetime
     events: List[PolicyEventResponse] = []
 

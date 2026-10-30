@@ -11,6 +11,7 @@ from backend.app.schemas.policy import (
     PolicyIssueRequest,
     PolicyCancelRequest
 )
+from backend.app.models.base import RecordSource
 from backend.app.utils.sequence import generate_policy_id
 
 router = APIRouter(prefix="/policies", tags=["Policies"])
@@ -98,8 +99,16 @@ def issue_policy(
             detail=f"Asset already has active policy {existing_overlap.business_id}. Overlapping coverage prohibited."
         )
 
-    p_count = db.query(Policy).count()
-    pol_id = generate_policy_id(p_count + 1)
+    existing_p_bids = db.query(Policy.business_id).all()
+    max_p_seq = 5000
+    for (bid,) in existing_p_bids:
+        try:
+            parts = bid.split("-")
+            if len(parts) == 3 and parts[2].isdigit():
+                max_p_seq = max(max_p_seq, int(parts[2]))
+        except Exception:
+            pass
+    pol_id = generate_policy_id(max_p_seq + 1)
     eff_date = date.today()
     exp_date = eff_date + timedelta(days=365)
 
@@ -116,7 +125,9 @@ def issue_policy(
         payment_status="PAID",
         customer_accepted=True,
         effective_date=eff_date,
-        expiration_date=exp_date
+        expiration_date=exp_date,
+        is_baseline=False,
+        record_source=RecordSource.USER
     )
     db.add(policy)
     db.flush()
@@ -126,7 +137,8 @@ def issue_policy(
         event_type="ISSUED",
         event_description=f"Policy {pol_id} issued upon customer acceptance and premium payment confirmation.",
         actor="System Underwriting Engine",
-        metadata_json={"payment_amount": float(quote.final_premium), "status": "PAID"}
+        metadata_json={"payment_amount": float(quote.final_premium), "status": "PAID"},
+        record_source=RecordSource.USER
     )
     db.add(ev)
     db.commit()

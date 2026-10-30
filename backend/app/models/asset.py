@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
-from backend.app.models.base import TimestampMixin
+from backend.app.models.base import TimestampMixin, RecordSourceMixin
 
 
-class InsuredAsset(Base, TimestampMixin):
+class InsuredAsset(Base, TimestampMixin, RecordSourceMixin):
     __tablename__ = "insured_assets"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)

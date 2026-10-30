@@ -5248,20 +5248,5 @@
     "status": "APPLIED",
     "reason": "Mid-term endorsement: Adjust policy coverage limit and premium",
     "is_baseline": true
-  },
-  {
-    "business_id": "END-POL-2026-990003-001",
-    "policy_business_id": "POL-2026-990003",
-    "endorsement_sequence": 1,
-    "endorsement_type": "COVERAGE_LIMIT_CHANGE",
-    "effective_date": "2026-11-21",
-    "prior_coverage_amount": 45000.0,
-    "new_coverage_amount": 750000.0,
-    "prior_premium": 1256.05,
-    "new_premium": 2512.1,
-    "premium_delta": 1256.05,
-    "status": "APPLIED",
-    "reason": "Requested coverage increase exceeding allowed underwriting product limits",
-    "is_baseline": false
   }
 ]

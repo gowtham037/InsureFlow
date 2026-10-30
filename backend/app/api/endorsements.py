@@ -7,6 +7,7 @@ from backend.app.models.endorsement import Endorsement
 from backend.app.models.policy import Policy, PolicyEvent
 from backend.app.schemas.endorsement import EndorsementCreate, EndorsementResponse
 from backend.app.utils.sequence import generate_endorsement_id
+from backend.app.models.base import RecordSource
 
 router = APIRouter(prefix="/endorsements", tags=["Endorsements"])
 
@@ -68,7 +69,9 @@ def create_endorsement(
         new_premium=new_prem,
         premium_delta=delta,
         status="APPLIED",
-        reason=payload.reason
+        reason=payload.reason,
+        is_baseline=False,
+        record_source=RecordSource.USER
     )
     db.add(endorsement)
 
@@ -82,7 +85,8 @@ def create_endorsement(
         event_type="ENDORSED",
         event_description=f"Endorsement {end_id} applied: coverage updated to ${new_cov:,.2f}, premium updated to ${new_prem:,.2f} (delta: ${delta:,.2f}).",
         actor="Underwriting Operator",
-        metadata_json={"endorsement_id": end_id, "delta": delta}
+        metadata_json={"endorsement_id": end_id, "delta": delta},
+        record_source=RecordSource.USER
     )
     db.add(ev)
     db.commit()

@@ -50,6 +50,9 @@ def get_applicant(id: int, db: Session = Depends(get_db)):
     return app
 
 
+from backend.app.models.base import RecordSource
+
+
 @router.post("", response_model=ApplicantResponse, status_code=201)
 def create_applicant(payload: ApplicantCreate, db: Session = Depends(get_db)):
     # Calculate age
@@ -58,9 +61,17 @@ def create_applicant(payload: ApplicantCreate, db: Session = Depends(get_db)):
         (today.month, today.day) < (payload.date_of_birth.month, payload.date_of_birth.day)
     )
 
-    # Next business ID
-    count = db.query(Applicant).count()
-    business_id = generate_applicant_id(count + 1)
+    # Non-colliding sequence for user-created applicant (reserve 1..5000 for baseline)
+    existing_bids = db.query(Applicant.business_id).all()
+    max_seq = 5000
+    for (bid,) in existing_bids:
+        try:
+            parts = bid.split("-")
+            if len(parts) == 3 and parts[2].isdigit():
+                max_seq = max(max_seq, int(parts[2]))
+        except Exception:
+            pass
+    business_id = generate_applicant_id(max_seq + 1)
 
     app = Applicant(
         business_id=business_id,
@@ -80,7 +91,8 @@ def create_applicant(payload: ApplicantCreate, db: Session = Depends(get_db)):
         credit_score=payload.credit_score,
         occupation=payload.occupation,
         employment_status=payload.employment_status,
-        claims_count_5yr=payload.claims_count_5yr
+        claims_count_5yr=payload.claims_count_5yr,
+        record_source=RecordSource.USER
     )
     db.add(app)
     db.commit()
@@ -88,9 +100,17 @@ def create_applicant(payload: ApplicantCreate, db: Session = Depends(get_db)):
 
     # Optional initial asset creation
     if payload.initial_asset:
-        ast_count = db.query(InsuredAsset).count()
-        ast_business_id = generate_asset_id(ast_count + 1)
-        ident = payload.initial_asset.identifier or f"ID-{payload.initial_asset.asset_type[:3]}-{ast_count + 1:06d}"
+        existing_ast_bids = db.query(InsuredAsset.business_id).all()
+        max_ast_seq = 5000
+        for (bid,) in existing_ast_bids:
+            try:
+                parts = bid.split("-")
+                if len(parts) == 3 and parts[2].isdigit():
+                    max_ast_seq = max(max_ast_seq, int(parts[2]))
+            except Exception:
+                pass
+        ast_business_id = generate_asset_id(max_ast_seq + 1)
+        ident = payload.initial_asset.identifier or f"ID-{payload.initial_asset.asset_type[:3]}-{max_ast_seq + 1:06d}"
         asset = InsuredAsset(
             business_id=ast_business_id,
             applicant_id=app.id,
@@ -100,7 +120,8 @@ def create_applicant(payload: ApplicantCreate, db: Session = Depends(get_db)):
             year_built_or_manufactured=payload.initial_asset.year_built_or_manufactured,
             make_model=payload.initial_asset.make_model,
             location_tier=payload.initial_asset.location_tier,
-            details=payload.initial_asset.details or {}
+            details=payload.initial_asset.details or {},
+            record_source=RecordSource.USER
         )
         db.add(asset)
         db.commit()
@@ -115,9 +136,17 @@ def add_applicant_asset(id: int, payload: InsuredAssetCreate, db: Session = Depe
     if not applicant:
         raise HTTPException(status_code=404, detail=f"Applicant with ID {id} not found.")
 
-    ast_count = db.query(InsuredAsset).count()
-    ast_business_id = generate_asset_id(ast_count + 1)
-    ident = payload.identifier or f"ID-{payload.asset_type[:3]}-{ast_count + 1:06d}"
+    existing_ast_bids = db.query(InsuredAsset.business_id).all()
+    max_ast_seq = 5000
+    for (bid,) in existing_ast_bids:
+        try:
+            parts = bid.split("-")
+            if len(parts) == 3 and parts[2].isdigit():
+                max_ast_seq = max(max_ast_seq, int(parts[2]))
+        except Exception:
+            pass
+    ast_business_id = generate_asset_id(max_ast_seq + 1)
+    ident = payload.identifier or f"ID-{payload.asset_type[:3]}-{max_ast_seq + 1:06d}"
 
     asset = InsuredAsset(
         business_id=ast_business_id,
@@ -128,7 +157,8 @@ def add_applicant_asset(id: int, payload: InsuredAssetCreate, db: Session = Depe
         year_built_or_manufactured=payload.year_built_or_manufactured,
         make_model=payload.make_model,
         location_tier=payload.location_tier,
-        details=payload.details or {}
+        details=payload.details or {},
+        record_source=RecordSource.USER
     )
     db.add(asset)
     db.commit()

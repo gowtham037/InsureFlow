@@ -2,10 +2,10 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, Numeric, Boolean, Text, ForeignKey, DateTime, JSON
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
-from backend.app.models.base import TimestampMixin
+from backend.app.models.base import TimestampMixin, RecordSourceMixin
 
 
-class Quote(Base, TimestampMixin):
+class Quote(Base, TimestampMixin, RecordSourceMixin):
     __tablename__ = "quotes"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -27,7 +27,7 @@ class Quote(Base, TimestampMixin):
     customer_accepted = Column(Boolean, default=False, nullable=False)
     customer_accepted_at = Column(DateTime, nullable=True)
     expires_at = Column(DateTime, nullable=False)
-    is_baseline = Column(Boolean, default=True, nullable=False)
+    is_baseline = Column(Boolean, default=False, nullable=False)
 
     # Relationships
     applicant = relationship("Applicant", back_populates="quotes")

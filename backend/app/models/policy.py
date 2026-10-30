@@ -2,10 +2,10 @@ from datetime import datetime, date
 from sqlalchemy import Column, Integer, String, Numeric, Boolean, Text, ForeignKey, Date, DateTime, JSON
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
-from backend.app.models.base import TimestampMixin
+from backend.app.models.base import TimestampMixin, RecordSourceMixin
 
 
-class Policy(Base, TimestampMixin):
+class Policy(Base, TimestampMixin, RecordSourceMixin):
     __tablename__ = "policies"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -24,7 +24,7 @@ class Policy(Base, TimestampMixin):
     expiration_date = Column(Date, nullable=False)
     cancellation_date = Column(Date, nullable=True)
     cancellation_reason = Column(Text, nullable=True)
-    is_baseline = Column(Boolean, default=True, nullable=False)
+    is_baseline = Column(Boolean, default=False, nullable=False)
 
     # Relationships
     quote = relationship("Quote", back_populates="policy")
@@ -56,7 +56,7 @@ class PolicyCoverage(Base):
     coverage_option = relationship("CoverageOption")
 
 
-class PolicyEvent(Base):
+class PolicyEvent(Base, RecordSourceMixin):
     __tablename__ = "policy_events"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)

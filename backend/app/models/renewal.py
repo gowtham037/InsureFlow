@@ -2,10 +2,10 @@ from datetime import date
 from sqlalchemy import Column, Integer, String, Numeric, Text, ForeignKey, Date, Boolean
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
-from backend.app.models.base import TimestampMixin
+from backend.app.models.base import TimestampMixin, RecordSourceMixin
 
 
-class Renewal(Base, TimestampMixin):
+class Renewal(Base, TimestampMixin, RecordSourceMixin):
     __tablename__ = "renewals"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -20,7 +20,7 @@ class Renewal(Base, TimestampMixin):
     effective_date = Column(Date, nullable=False)
     expiration_date = Column(Date, nullable=False)
     decision_reason = Column(Text, nullable=True)
-    is_baseline = Column(Boolean, default=True, nullable=False)
+    is_baseline = Column(Boolean, default=False, nullable=False)
 
     previous_policy = relationship("Policy", foreign_keys=[previous_policy_id], back_populates="renewals")
     new_policy = relationship("Policy", foreign_keys=[new_policy_id])

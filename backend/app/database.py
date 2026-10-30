@@ -60,6 +60,29 @@ def init_db(drop_first: bool = False):
     if drop_first:
         Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
+    # Safe schema migration: ensure record_source column exists on existing tables
+    from sqlalchemy import text
+    try:
+        with engine.connect() as conn:
+            for tbl in [
+                "applicants",
+                "insured_assets",
+                "quotes",
+                "underwriting_decisions",
+                "policies",
+                "policy_events",
+                "endorsements",
+                "renewals"
+            ]:
+                try:
+                    conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS record_source VARCHAR(30) DEFAULT 'USER' NOT NULL;"))
+                    conn.commit()
+                except Exception:
+                    pass
+    except Exception as e:
+        logger.warning(f"Schema migration warning: {e}")
+
     logger.info("Database tables initialized successfully.")
 
 

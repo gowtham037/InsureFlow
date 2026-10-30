@@ -2,10 +2,10 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Boolean, JSON
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
-from backend.app.models.base import TimestampMixin
+from backend.app.models.base import TimestampMixin, RecordSourceMixin
 
 
-class UnderwritingDecision(Base, TimestampMixin):
+class UnderwritingDecision(Base, TimestampMixin, RecordSourceMixin):
     __tablename__ = "underwriting_decisions"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)

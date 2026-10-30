@@ -34,6 +34,9 @@ class QuoteResponse(BaseModel):
     customer_accepted_at: Optional[datetime] = None
     created_at: datetime
     expires_at: datetime
+    is_baseline: Optional[bool] = False
+    record_source: Optional[str] = "USER"
+    source: Optional[str] = None
 
     class Config:
         from_attributes = True

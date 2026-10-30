@@ -15,6 +15,7 @@ from backend.app.rules.risk_scoring import calculate_risk_score
 from backend.app.rules.underwriting_rules import determine_underwriting_decision
 from backend.app.schemas.applicant import InsuredAssetCreate
 from backend.app.utils.sequence import generate_quote_id, generate_decision_id, generate_asset_id
+from backend.app.models.base import RecordSource
 
 router = APIRouter(prefix="/quotes", tags=["Quotes"])
 
@@ -115,9 +116,17 @@ def create_quote(payload: QuoteCreate, db: Session = Depends(get_db)):
                     )
 
         if not asset and ast_payload:
-            ast_count = db.query(InsuredAsset).count()
-            ast_business_id = generate_asset_id(ast_count + 1)
-            ident = ast_payload.identifier or f"ID-{ast_payload.asset_type[:3]}-{ast_count + 1:06d}"
+            existing_ast_bids = db.query(InsuredAsset.business_id).all()
+            max_ast_seq = 5000
+            for (bid,) in existing_ast_bids:
+                try:
+                    parts = bid.split("-")
+                    if len(parts) == 3 and parts[2].isdigit():
+                        max_ast_seq = max(max_ast_seq, int(parts[2]))
+                except Exception:
+                    pass
+            ast_business_id = generate_asset_id(max_ast_seq + 1)
+            ident = ast_payload.identifier or f"ID-{ast_payload.asset_type[:3]}-{max_ast_seq + 1:06d}"
             asset = InsuredAsset(
                 business_id=ast_business_id,
                 applicant_id=applicant.id,
@@ -127,7 +136,8 @@ def create_quote(payload: QuoteCreate, db: Session = Depends(get_db)):
                 year_built_or_manufactured=ast_payload.year_built_or_manufactured,
                 make_model=ast_payload.make_model,
                 location_tier=ast_payload.location_tier,
-                details=ast_payload.details or {}
+                details=ast_payload.details or {},
+                record_source=RecordSource.USER
             )
             db.add(asset)
             db.commit()
@@ -185,8 +195,17 @@ def create_quote(payload: QuoteCreate, db: Session = Depends(get_db)):
         coverage_amount=payload.coverage_amount
     )
 
-    q_count = db.query(Quote).count()
-    b_id = generate_quote_id(q_count + 1)
+    # Non-colliding sequence for user quotes and decisions (reserve 1..5000 for baseline)
+    existing_q_bids = db.query(Quote.business_id).all()
+    max_q_seq = 5000
+    for (bid,) in existing_q_bids:
+        try:
+            parts = bid.split("-")
+            if len(parts) == 3 and parts[2].isdigit():
+                max_q_seq = max(max_q_seq, int(parts[2]))
+        except Exception:
+            pass
+    b_id = generate_quote_id(max_q_seq + 1)
     status = "REJECTED" if (not is_eligible or uw_dec == "DECLINED") else "EVALUATED"
 
     quote = Quote(
@@ -206,14 +225,16 @@ def create_quote(payload: QuoteCreate, db: Session = Depends(get_db)):
         eligibility_reasons=elig_reasons,
         pricing_explanation=explanation,
         customer_accepted=False,
-        expires_at=datetime.utcnow() + timedelta(days=30)
+        expires_at=datetime.utcnow() + timedelta(days=30),
+        is_baseline=False,
+        record_source=RecordSource.USER
     )
     db.add(quote)
     db.flush()
 
     # Create UW Decision
     dec = UnderwritingDecision(
-        business_id=generate_decision_id(q_count + 1),
+        business_id=generate_decision_id(max_q_seq + 1),
         quote_id=quote.id,
         decision=uw_dec,
         authority_level=authority,
@@ -222,7 +243,8 @@ def create_quote(payload: QuoteCreate, db: Session = Depends(get_db)):
         rule_identifiers=rule_ids,
         reviewer_name=reviewer,
         reviewed_at=datetime.utcnow(),
-        is_override=False
+        is_override=False,
+        record_source=RecordSource.USER
     )
     db.add(dec)
     db.commit()

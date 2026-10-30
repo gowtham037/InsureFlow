@@ -7,6 +7,7 @@ from backend.app.models.renewal import Renewal
 from backend.app.models.policy import Policy, PolicyEvent
 from backend.app.schemas.renewal import RenewalGenerateRequest, RenewalResponse
 from backend.app.utils.sequence import generate_renewal_id
+from backend.app.models.base import RecordSource
 
 router = APIRouter(prefix="/renewals", tags=["Renewals"])
 
@@ -63,7 +64,9 @@ def generate_renewal_offer(
         premium_change_percent=change_pct,
         effective_date=eff_date,
         expiration_date=exp_date,
-        decision_reason=f"Standard renewal cycle {ren_year} offer ({change_pct}% rate revision)."
+        decision_reason=f"Standard renewal cycle {ren_year} offer ({change_pct}% rate revision).",
+        is_baseline=False,
+        record_source=RecordSource.USER
     )
     db.add(renewal)
 
@@ -72,7 +75,8 @@ def generate_renewal_offer(
         event_type="RENEWAL_OFFERED",
         event_description=f"Renewal offer {ren_id} generated for year {ren_year} with premium ${new_prem:,.2f}.",
         actor="System Renewal Engine",
-        metadata_json={"renewal_id": ren_id, "renewal_premium": new_prem}
+        metadata_json={"renewal_id": ren_id, "renewal_premium": new_prem},
+        record_source=RecordSource.USER
     )
     db.add(ev)
     db.commit()
