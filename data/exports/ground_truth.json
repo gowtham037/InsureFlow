@@ -12,7 +12,7 @@
   },
   {
     "anomaly_id": "ANM-2026-000002",
-    "entity_type": "PREMIUM",
+    "entity_type": "POLICY",
     "entity_id": "POL-2026-990002",
     "issue_type": "PREMIUM_FORMULA_MISMATCH",
     "severity": "HIGH",
@@ -45,7 +45,7 @@
   },
   {
     "anomaly_id": "ANM-2026-000005",
-    "entity_type": "POLICY_PERIOD",
+    "entity_type": "POLICY",
     "entity_id": "POL-2026-990006",
     "issue_type": "OVERLAPPING_POLICY_PERIOD",
     "severity": "HIGH",
