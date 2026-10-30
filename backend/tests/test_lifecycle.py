@@ -74,17 +74,34 @@ def test_policy_issuance_invariants():
 
 def test_policy_cancellation_preserves_events():
     db = SessionLocal()
-    pol = db.query(Policy).filter(Policy.status == "ACTIVE").first()
+    # Find an active policy that has NO renewals attached
+    pol = db.query(Policy).filter(
+        Policy.status == "ACTIVE",
+        ~Policy.id.in_(db.query(Renewal.previous_policy_id))
+    ).first()
+    if not pol:
+        pol = db.query(Policy).filter(Policy.status == "ACTIVE").first()
     assert pol is not None
     pol_id = pol.id
+    original_status = pol.status
     db.close()
 
-    res = client.post(f"/api/policies/{pol_id}/cancel", json={"cancellation_reason": "Customer request"})
-    assert res.status_code == 200
-    data = res.json()
-    assert data["status"] == "CANCELLED"
-    assert data["cancellation_reason"] == "Customer request"
-    assert len(data["events"]) > 0
+    try:
+        res = client.post(f"/api/policies/{pol_id}/cancel", json={"cancellation_reason": "Customer request"})
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "CANCELLED"
+        assert data["cancellation_reason"] == "Customer request"
+        assert len(data["events"]) > 0
+    finally:
+        db2 = SessionLocal()
+        p = db2.query(Policy).filter(Policy.id == pol_id).first()
+        if p:
+            p.status = original_status
+            p.cancellation_date = None
+            p.cancellation_reason = None
+            db2.commit()
+        db2.close()
 
 
 def test_renewal_rejected_for_cancelled_policy():
