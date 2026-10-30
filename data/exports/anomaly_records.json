@@ -1,0 +1,57 @@
+[
+  {
+    "business_id": "ANM-2026-000001",
+    "entity_type": "POLICY",
+    "entity_id": "POL-2026-990001",
+    "issue_type": "ISSUANCE_WITHOUT_ACCEPTANCE",
+    "severity": "CRITICAL",
+    "description": "Policy POL-2026-990001 is in status 'ACTIVE' without customer acceptance confirmation.",
+    "expected_outcome": "customer_accepted must be True before policy issuance or activation.",
+    "actual_detected_outcome": "customer_accepted is False on active policy record.",
+    "detection_rule": "RULE-INV-001: Policy Issuance Acceptance Invariant"
+  },
+  {
+    "business_id": "ANM-2026-000002",
+    "entity_type": "PREMIUM",
+    "entity_id": "POL-2026-990002",
+    "issue_type": "PREMIUM_FORMULA_MISMATCH",
+    "severity": "HIGH",
+    "description": "Policy POL-2026-990002 premium ($244.02) deviates from standard actuarial formula output ($697.20) by $453.18.",
+    "expected_outcome": "Annual premium must equal formula result ($697.20).",
+    "actual_detected_outcome": "Stored annual premium is $244.02.",
+    "detection_rule": "RULE-INV-002: Actuarial Formula Reconciliation Invariant"
+  },
+  {
+    "business_id": "ANM-2026-000003",
+    "entity_type": "ENDORSEMENT",
+    "entity_id": "END-POL-2026-990003-001",
+    "issue_type": "ENDORSEMENT_LIMIT_EXCEEDED",
+    "severity": "HIGH",
+    "description": "Endorsement END-POL-2026-990003-001 sets coverage to $750,000.00, which exceeds the product (PRD-MOTOR-001) maximum limit of $250,000.00.",
+    "expected_outcome": "Endorsement coverage must not exceed $250,000.00.",
+    "actual_detected_outcome": "Endorsement coverage set to $750,000.00.",
+    "detection_rule": "RULE-INV-003: Product Coverage Ceiling Invariant"
+  },
+  {
+    "business_id": "ANM-2026-000004",
+    "entity_type": "RENEWAL",
+    "entity_id": "REN-POL-2026-990004-2027",
+    "issue_type": "RENEWAL_ON_CANCELLED_POLICY",
+    "severity": "CRITICAL",
+    "description": "Renewal REN-POL-2026-990004-2027 with status 'OFFERED' was initiated for policy POL-2026-990004 which is CANCELLED.",
+    "expected_outcome": "Cancelled policies are ineligible for renewal offers.",
+    "actual_detected_outcome": "Renewal record exists linked to cancelled policy POL-2026-990004.",
+    "detection_rule": "RULE-INV-004: Cancelled Policy Renewal Restriction Invariant"
+  },
+  {
+    "business_id": "ANM-2026-000005",
+    "entity_type": "POLICY_PERIOD",
+    "entity_id": "POL-2026-990006",
+    "issue_type": "OVERLAPPING_POLICY_PERIOD",
+    "severity": "HIGH",
+    "description": "Active policy POL-2026-990006 [2026-11-06 to 2027-11-06] overlaps with active policy POL-2026-990005 [2026-10-22 to 2027-10-22] for the same asset (Asset ID: 19296).",
+    "expected_outcome": "No simultaneous overlapping active coverage periods permitted on the same insured asset.",
+    "actual_detected_outcome": "Overlapping active policies detected (POL-2026-990005 and POL-2026-990006).",
+    "detection_rule": "RULE-INV-005: Double Insurance / Period Overlap Invariant"
+  }
+]

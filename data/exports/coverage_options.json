@@ -1,0 +1,122 @@
+[
+  {
+    "code": "COV-MTR-COLLISION",
+    "product_code": "PRD-MOTOR-001",
+    "name": "Collision Damage Waiver",
+    "coverage_category": "CORE",
+    "default_limit": 50000.0,
+    "min_limit": 10000.0,
+    "max_limit": 150000.0,
+    "premium_multiplier": 0.25
+  },
+  {
+    "code": "COV-MTR-COMPREHENSIVE",
+    "product_code": "PRD-MOTOR-001",
+    "name": "Comprehensive Theft & Vandalism",
+    "coverage_category": "CORE",
+    "default_limit": 50000.0,
+    "min_limit": 10000.0,
+    "max_limit": 150000.0,
+    "premium_multiplier": 0.2
+  },
+  {
+    "code": "COV-MTR-LIABILITY",
+    "product_code": "PRD-MOTOR-001",
+    "name": "Third-Party Bodily & Property Liability",
+    "coverage_category": "CORE",
+    "default_limit": 100000.0,
+    "min_limit": 25000.0,
+    "max_limit": 250000.0,
+    "premium_multiplier": 0.35
+  },
+  {
+    "code": "COV-MTR-ROADSIDE",
+    "product_code": "PRD-MOTOR-001",
+    "name": "24/7 Roadside Assistance & Towing",
+    "coverage_category": "ADD_ON",
+    "default_limit": 5000.0,
+    "min_limit": 1000.0,
+    "max_limit": 10000.0,
+    "premium_multiplier": 0.08
+  },
+  {
+    "code": "COV-HOM-DWELLING",
+    "product_code": "PRD-HOME-001",
+    "name": "Dwelling Structure Protection",
+    "coverage_category": "CORE",
+    "default_limit": 350000.0,
+    "min_limit": 100000.0,
+    "max_limit": 2000000.0,
+    "premium_multiplier": 0.4
+  },
+  {
+    "code": "COV-HOM-CONTENTS",
+    "product_code": "PRD-HOME-001",
+    "name": "Personal Property Contents",
+    "coverage_category": "CORE",
+    "default_limit": 150000.0,
+    "min_limit": 50000.0,
+    "max_limit": 800000.0,
+    "premium_multiplier": 0.25
+  },
+  {
+    "code": "COV-HOM-LIABILITY",
+    "product_code": "PRD-HOME-001",
+    "name": "Family Personal Liability",
+    "coverage_category": "CORE",
+    "default_limit": 300000.0,
+    "min_limit": 100000.0,
+    "max_limit": 1000000.0,
+    "premium_multiplier": 0.2
+  },
+  {
+    "code": "COV-HOM-FLOOD",
+    "product_code": "PRD-HOME-001",
+    "name": "Catastrophic Flood Rider",
+    "coverage_category": "OPTIONAL",
+    "default_limit": 100000.0,
+    "min_limit": 25000.0,
+    "max_limit": 500000.0,
+    "premium_multiplier": 0.15
+  },
+  {
+    "code": "COV-HLT-HOSPITAL",
+    "product_code": "PRD-HEALTH-001",
+    "name": "Inpatient Hospitalization & Surgery",
+    "coverage_category": "CORE",
+    "default_limit": 250000.0,
+    "min_limit": 50000.0,
+    "max_limit": 1000000.0,
+    "premium_multiplier": 0.5
+  },
+  {
+    "code": "COV-HLT-CRITICAL",
+    "product_code": "PRD-HEALTH-001",
+    "name": "Critical Illness Major Disease Lump Sum",
+    "coverage_category": "OPTIONAL",
+    "default_limit": 100000.0,
+    "min_limit": 25000.0,
+    "max_limit": 500000.0,
+    "premium_multiplier": 0.25
+  },
+  {
+    "code": "COV-HLT-PRESCRIPTION",
+    "product_code": "PRD-HEALTH-001",
+    "name": "Prescription Drug Benefit",
+    "coverage_category": "CORE",
+    "default_limit": 25000.0,
+    "min_limit": 5000.0,
+    "max_limit": 50000.0,
+    "premium_multiplier": 0.15
+  },
+  {
+    "code": "COV-HLT-DENTAL-VISION",
+    "product_code": "PRD-HEALTH-001",
+    "name": "Dental & Vision Supplemental",
+    "coverage_category": "ADD_ON",
+    "default_limit": 5000.0,
+    "min_limit": 1000.0,
+    "max_limit": 10000.0,
+    "premium_multiplier": 0.1
+  }
+]

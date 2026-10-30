@@ -1,0 +1,74 @@
+[
+  {
+    "factor_code": "RF-AGE-YOUNG",
+    "category": "APPLICANT",
+    "name": "Young Driver / Applicant (<25)",
+    "description": "Risk factor: Young Driver / Applicant (<25)",
+    "base_score_impact": 15,
+    "premium_multiplier": 1.3
+  },
+  {
+    "factor_code": "RF-AGE-SENIOR",
+    "category": "APPLICANT",
+    "name": "Senior Applicant (>70)",
+    "description": "Risk factor: Senior Applicant (>70)",
+    "base_score_impact": 12,
+    "premium_multiplier": 1.25
+  },
+  {
+    "factor_code": "RF-CREDIT-LOW",
+    "category": "APPLICANT",
+    "name": "Adverse Credit Profile (<600)",
+    "description": "Risk factor: Adverse Credit Profile (<600)",
+    "base_score_impact": 18,
+    "premium_multiplier": 1.2
+  },
+  {
+    "factor_code": "RF-HIGH-CLAIM-HIST",
+    "category": "BEHAVIOR",
+    "name": "Frequent Loss Claims History (2+)",
+    "description": "Risk factor: Frequent Loss Claims History (2+)",
+    "base_score_impact": 20,
+    "premium_multiplier": 1.4
+  },
+  {
+    "factor_code": "RF-ASSET-HIGH-VAL",
+    "category": "ASSET",
+    "name": "Luxury / High Value Asset Exposure",
+    "description": "Risk factor: Luxury / High Value Asset Exposure",
+    "base_score_impact": 14,
+    "premium_multiplier": 1.25
+  },
+  {
+    "factor_code": "RF-LOCATION-TIER1",
+    "category": "LOCATION",
+    "name": "High Density Metro Traffic/Crime Area",
+    "description": "Risk factor: High Density Metro Traffic/Crime Area",
+    "base_score_impact": 10,
+    "premium_multiplier": 1.15
+  },
+  {
+    "factor_code": "RF-FLOOD-ZONE",
+    "category": "LOCATION",
+    "name": "Special Flood Hazard Zone (SFHA)",
+    "description": "Risk factor: Special Flood Hazard Zone (SFHA)",
+    "base_score_impact": 20,
+    "premium_multiplier": 1.5
+  },
+  {
+    "factor_code": "RF-HEALTH-SMOKER",
+    "category": "HEALTH",
+    "name": "Nicotine / Tobacco Consumption History",
+    "description": "Risk factor: Nicotine / Tobacco Consumption History",
+    "base_score_impact": 15,
+    "premium_multiplier": 1.5
+  },
+  {
+    "factor_code": "RF-HEALTH-PRE-EXISTING",
+    "category": "HEALTH",
+    "name": "Documented Chronic Medical Conditions",
+    "description": "Risk factor: Documented Chronic Medical Conditions",
+    "base_score_impact": 18,
+    "premium_multiplier": 1.35
+  }
+]

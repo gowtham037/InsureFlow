@@ -1,0 +1,38 @@
+[
+  {
+    "product_code": "PRD-MOTOR-001",
+    "name": "AutoShield Comprehensive Motor Policy",
+    "line_of_business": "MOTOR",
+    "description": "Comprehensive automobile coverage covering collision, theft, third-party liability, and roadside assistance.",
+    "min_coverage_limit": 10000.0,
+    "max_coverage_limit": 250000.0,
+    "min_applicant_age": 18,
+    "max_applicant_age": 85,
+    "base_premium": 500.0,
+    "is_active": true
+  },
+  {
+    "product_code": "PRD-HOME-001",
+    "name": "HomeSafe Premier Homeowner Protection",
+    "line_of_business": "HOME",
+    "description": "All-risk residential structural and personal property coverage against fire, natural calamities, theft, and liability.",
+    "min_coverage_limit": 100000.0,
+    "max_coverage_limit": 3000000.0,
+    "min_applicant_age": 18,
+    "max_applicant_age": 99,
+    "base_premium": 750.0,
+    "is_active": true
+  },
+  {
+    "product_code": "PRD-HEALTH-001",
+    "name": "VitalCare Prime Individual Health",
+    "line_of_business": "HEALTH",
+    "description": "Full hospitalization, in-patient, out-patient, prescription drug, and critical illness medical benefit cover.",
+    "min_coverage_limit": 50000.0,
+    "max_coverage_limit": 1000000.0,
+    "min_applicant_age": 18,
+    "max_applicant_age": 75,
+    "base_premium": 1200.0,
+    "is_active": true
+  }
+]

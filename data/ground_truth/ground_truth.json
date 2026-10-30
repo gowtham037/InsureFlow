@@ -1,0 +1,57 @@
+[
+  {
+    "anomaly_id": "ANM-2026-000001",
+    "entity_type": "POLICY",
+    "entity_id": "POL-2026-990001",
+    "issue_type": "ISSUANCE_WITHOUT_ACCEPTANCE",
+    "severity": "CRITICAL",
+    "description": "Policy POL-2026-990001 has status ACTIVE but customer_accepted is FALSE.",
+    "expected_outcome": "customer_accepted must be True prior to policy issuance",
+    "actual_detected_outcome": "customer_accepted is False on active policy",
+    "ground_truth_label": true
+  },
+  {
+    "anomaly_id": "ANM-2026-000002",
+    "entity_type": "PREMIUM",
+    "entity_id": "POL-2026-990002",
+    "issue_type": "PREMIUM_FORMULA_MISMATCH",
+    "severity": "HIGH",
+    "description": "Policy POL-2026-990002 premium ($244.02) violates pricing formula ($697.20).",
+    "expected_outcome": "Annual premium should strictly reconcile with formula ($697.20)",
+    "actual_detected_outcome": "Stored premium is $244.02",
+    "ground_truth_label": true
+  },
+  {
+    "anomaly_id": "ANM-2026-000003",
+    "entity_type": "ENDORSEMENT",
+    "entity_id": "END-POL-2026-990003-001",
+    "issue_type": "ENDORSEMENT_LIMIT_EXCEEDED",
+    "severity": "HIGH",
+    "description": "Endorsement END-POL-2026-990003-001 requested coverage $750,000.00 exceeding product max limit $250,000.00.",
+    "expected_outcome": "Endorsement coverage must be <= product max limit ($250,000.00)",
+    "actual_detected_outcome": "Endorsement applied with coverage $750,000.00",
+    "ground_truth_label": true
+  },
+  {
+    "anomaly_id": "ANM-2026-000004",
+    "entity_type": "RENEWAL",
+    "entity_id": "REN-POL-2026-990004-2027",
+    "issue_type": "RENEWAL_ON_CANCELLED_POLICY",
+    "severity": "CRITICAL",
+    "description": "Renewal REN-POL-2026-990004-2027 was generated for policy POL-2026-990004 which is CANCELLED.",
+    "expected_outcome": "Renewals must never be generated for cancelled policies",
+    "actual_detected_outcome": "Renewal status OFFERED for policy with status CANCELLED",
+    "ground_truth_label": true
+  },
+  {
+    "anomaly_id": "ANM-2026-000005",
+    "entity_type": "POLICY_PERIOD",
+    "entity_id": "POL-2026-990006",
+    "issue_type": "OVERLAPPING_POLICY_PERIOD",
+    "severity": "HIGH",
+    "description": "Active policy POL-2026-990006 overlaps with active policy POL-2026-990005 for asset 19296.",
+    "expected_outcome": "No duplicate active policies allowed on the same asset during overlapping periods",
+    "actual_detected_outcome": "Overlapping active policies detected (POL-2026-990005 and POL-2026-990006).",
+    "ground_truth_label": true
+  }
+]

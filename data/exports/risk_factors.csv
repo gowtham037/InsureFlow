@@ -1,0 +1,10 @@
+factor_code,category,name,description,base_score_impact,premium_multiplier
+RF-AGE-YOUNG,APPLICANT,Young Driver / Applicant (<25),Risk factor: Young Driver / Applicant (<25),15,1.3
+RF-AGE-SENIOR,APPLICANT,Senior Applicant (>70),Risk factor: Senior Applicant (>70),12,1.25
+RF-CREDIT-LOW,APPLICANT,Adverse Credit Profile (<600),Risk factor: Adverse Credit Profile (<600),18,1.2
+RF-HIGH-CLAIM-HIST,BEHAVIOR,Frequent Loss Claims History (2+),Risk factor: Frequent Loss Claims History (2+),20,1.4
+RF-ASSET-HIGH-VAL,ASSET,Luxury / High Value Asset Exposure,Risk factor: Luxury / High Value Asset Exposure,14,1.25
+RF-LOCATION-TIER1,LOCATION,High Density Metro Traffic/Crime Area,Risk factor: High Density Metro Traffic/Crime Area,10,1.15
+RF-FLOOD-ZONE,LOCATION,Special Flood Hazard Zone (SFHA),Risk factor: Special Flood Hazard Zone (SFHA),20,1.5
+RF-HEALTH-SMOKER,HEALTH,Nicotine / Tobacco Consumption History,Risk factor: Nicotine / Tobacco Consumption History,15,1.5
+RF-HEALTH-PRE-EXISTING,HEALTH,Documented Chronic Medical Conditions,Risk factor: Documented Chronic Medical Conditions,18,1.35
