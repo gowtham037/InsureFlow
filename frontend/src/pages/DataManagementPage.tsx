@@ -14,7 +14,8 @@ import {
   Activity,
   Layers,
   FileCode,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Archive
 } from 'lucide-react';
 
 export const DataManagementPage: React.FC = () => {
@@ -289,7 +290,7 @@ export const DataManagementPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-xs">
                 <button
                   onClick={() => setSelectedFormat('csv')}
@@ -310,9 +311,20 @@ export const DataManagementPage: React.FC = () => {
               </div>
 
               <a
+                href={apiClient.exportBundleUrl(selectedFormat)}
+                download={`insureflow_${selectedFormat}_all_datasets.zip`}
+                className="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
+                title={`Download all 15 datasets as a single ${selectedFormat.toUpperCase()} .zip archive`}
+              >
+                <Archive className="w-3.5 h-3.5 text-brand-600" />
+                Download All ({selectedFormat.toUpperCase()} .ZIP)
+              </a>
+
+              <a
                 href={apiClient.exportSqlSeedUrl}
-                download
-                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs"
+                download="seed_data.sql"
+                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
+                title="Download full SQL seed data script"
               >
                 <FileCode className="w-3.5 h-3.5 text-emerald-400" />
                 SQL Seed (seed_data.sql)
@@ -321,32 +333,29 @@ export const DataManagementPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-4">
-            {datasets.map((ds) => {
-              const url = apiClient.getExportUrl(ds.id, selectedFormat);
-              return (
-                <div
-                  key={ds.id}
-                  className="p-3 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-lg flex items-center justify-between transition-colors group"
-                >
-                  <div className="overflow-hidden pr-2">
-                    <span className="font-bold text-xs text-slate-800 block truncate">
-                      {ds.name}.{selectedFormat}
-                    </span>
-                    <span className="text-[10px] text-slate-500 block truncate">
-                      {ds.desc}
-                    </span>
-                  </div>
-                  <a
-                    href={url}
-                    download
-                    className="p-2 bg-white hover:bg-brand-50 border border-slate-200 rounded-md text-slate-700 hover:text-brand-600 transition-colors shrink-0 shadow-2xs"
-                    title={`Download ${ds.name} in ${selectedFormat.toUpperCase()}`}
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                  </a>
+            {datasets.map((ds) => (
+              <div
+                key={ds.id}
+                className="p-3 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-lg flex items-center justify-between transition-colors group"
+              >
+                <div className="overflow-hidden pr-2">
+                  <span className="font-bold text-xs text-slate-800 block truncate">
+                    {ds.name}.{selectedFormat}
+                  </span>
+                  <span className="text-[10px] text-slate-500 block truncate">
+                    {ds.desc}
+                  </span>
                 </div>
-              );
-            })}
+                <a
+                  href={apiClient.getExportUrl(ds.id, selectedFormat)}
+                  download={`${ds.id}.${selectedFormat}`}
+                  className="p-2 bg-white hover:bg-brand-50 border border-slate-200 rounded-md text-slate-700 hover:text-brand-600 transition-colors shrink-0 shadow-2xs inline-flex items-center justify-center cursor-pointer"
+                  title={`Download ${ds.name}.${selectedFormat}`}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            ))}
           </div>
         </div>
 

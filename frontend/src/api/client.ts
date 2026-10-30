@@ -120,12 +120,13 @@ export const apiClient = {
 
   // Exports URLs & Catalog
   getExportsList: () => api.get<any>('/exports').then(res => res.data),
-  getExportUrl: (datasetName: string, format: 'csv' | 'json' = 'csv') => `${API_BASE_URL}/exports/${datasetName}?format=${format}`,
-  exportApplicantsUrl: `${API_BASE_URL}/exports/applicants?format=csv`,
-  exportQuotesUrl: `${API_BASE_URL}/exports/quotes?format=csv`,
-  exportPoliciesUrl: `${API_BASE_URL}/exports/policies?format=csv`,
-  exportGroundTruthUrl: `${API_BASE_URL}/exports/ground_truth?format=csv`,
-  exportSqlSeedUrl: `${API_BASE_URL}/exports/sql-seed`,
+  getExportUrl: (datasetName: string, format: 'csv' | 'json' = 'csv') => `${API_BASE_URL}/exports/${datasetName}.${format}`,
+  exportApplicantsUrl: `${API_BASE_URL}/exports/applicants.csv`,
+  exportQuotesUrl: `${API_BASE_URL}/exports/quotes.csv`,
+  exportPoliciesUrl: `${API_BASE_URL}/exports/policies.csv`,
+  exportGroundTruthUrl: `${API_BASE_URL}/exports/ground_truth.csv`,
+  exportSqlSeedUrl: `${API_BASE_URL}/exports/seed_data.sql`,
+  exportBundleUrl: (format = 'csv') => `${API_BASE_URL}/exports/insureflow_${format}_all_datasets.zip`,
 };
 
 export default api;
