@@ -469,7 +469,7 @@ export const DataManagementPage: React.FC = () => {
                       : '300 starter applicants, 400 quotes, 200 policies, 120 renewals, and 50 endorsements'}
                   </li>
                   <li>Injected negative anomaly test scenarios and independent detector logs</li>
-                  <li>Baseline CSV &amp; JSON exports in data/exports/ and deterministic SHA-256 hashes</li>
+                  <li>Runtime CSV &amp; JSON exports generated in data/runtime_exports/ (canonical submission baseline in data/exports/ preserved)</li>
                 </ul>
               </div>
 

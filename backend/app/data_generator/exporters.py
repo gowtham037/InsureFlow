@@ -18,7 +18,7 @@ from backend.app.models.renewal import Renewal
 from backend.app.models.anomaly import AnomalyRecord
 
 
-def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Dict[str, Any]:
+def export_dataset_to_files(db: Session, export_dir: str = "data/runtime_exports") -> Dict[str, Any]:
     """
     Exports all 15 required relational entities to CSV and JSON formats,
     computes deterministic SHA-256 checksums across all datasets,
@@ -277,8 +277,10 @@ def export_dataset_to_files(db: Session, export_dir: str = "data/exports") -> Di
     _write_json_and_csv(anm_data, export_dir, "anomaly_records")
     summary["counts"]["anomaly_records"] = len(anm_data)
 
-    # 15. Ground Truth (mirror into data/exports)
-    gt_source = "data/ground_truth/ground_truth.json"
+    # 15. Ground Truth (mirror into export_dir)
+    gt_source = os.path.join(export_dir, "ground_truth.json")
+    if not os.path.exists(gt_source):
+        gt_source = "data/ground_truth/ground_truth.json"
     if os.path.exists(gt_source):
         with open(gt_source, "r", encoding="utf-8") as f:
             gt_data = json.load(f)

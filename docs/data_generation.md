@@ -84,4 +84,5 @@ python -m app.data_generator --mode starter --seed 20261022
 ```bash
 python -m app.data_generator --mode full --seed 20261022
 ```
-Outputs are automatically committed to the database and exported to `data/exports/` in CSV and JSON formats.
+
+Outputs are automatically committed to the database and exported to `data/runtime_exports/` (or `data/exports/` when `--export-dir data/exports` is explicitly supplied) in CSV and JSON formats.

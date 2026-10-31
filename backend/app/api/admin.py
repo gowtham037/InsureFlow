@@ -36,6 +36,7 @@ _generation_state = {
 class GenerateDatasetRequest(BaseModel):
     mode: str = "starter"  # starter or full
     seed: int = 20261022
+    export_dir: str = "data/runtime_exports"
 
 
 @router.post("/generate-dataset")
@@ -58,7 +59,7 @@ def trigger_generation(
         _generation_state["started_at"] = datetime.utcnow().isoformat()
         _generation_state["last_error"] = None
 
-        result = generate_dataset(mode=payload.mode, seed=payload.seed, db=db)
+        result = generate_dataset(mode=payload.mode, seed=payload.seed, db=db, export_dir=payload.export_dir)
 
         _generation_state["status"] = "COMPLETED"
         _generation_state["completed_at"] = datetime.utcnow().isoformat()

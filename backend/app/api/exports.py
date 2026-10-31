@@ -26,31 +26,45 @@ VALID_DATASETS = [
 ]
 
 
+def resolve_export_file(filename: str) -> Optional[str]:
+    """
+    Checks data/runtime_exports/ first (newest runtime generation),
+    and falls back to data/exports/ (canonical committed submission baseline).
+    """
+    runtime_path = os.path.join("data/runtime_exports", filename)
+    if os.path.exists(runtime_path):
+        return runtime_path
+    baseline_path = os.path.join("data/exports", filename)
+    if os.path.exists(baseline_path):
+        return baseline_path
+    return None
+
+
 @router.get("")
 def list_exports():
     """
     Returns a catalog of all generated datasets, formats, file sizes, and download links.
     """
-    export_dir = "data/exports"
     datasets = []
     for name in VALID_DATASETS:
-        csv_path = os.path.join(export_dir, f"{name}.csv")
-        json_path = os.path.join(export_dir, f"{name}.json")
+        csv_path = resolve_export_file(f"{name}.csv")
+        json_path = resolve_export_file(f"{name}.json")
         datasets.append({
             "name": name,
-            "has_csv": os.path.exists(csv_path),
-            "csv_size_bytes": os.path.getsize(csv_path) if os.path.exists(csv_path) else 0,
-            "has_json": os.path.exists(json_path),
-            "json_size_bytes": os.path.getsize(json_path) if os.path.exists(json_path) else 0,
+            "has_csv": csv_path is not None,
+            "csv_size_bytes": os.path.getsize(csv_path) if csv_path else 0,
+            "has_json": json_path is not None,
+            "json_size_bytes": os.path.getsize(json_path) if json_path else 0,
             "csv_url": f"/api/exports/{name}?format=csv",
             "json_url": f"/api/exports/{name}?format=json"
         })
-    sql_path = os.path.join(export_dir, "seed_data.sql")
+    sql_path = resolve_export_file("seed_data.sql")
     return {
         "datasets": datasets,
-        "has_sql_seed": os.path.exists(sql_path),
+        "has_sql_seed": sql_path is not None,
         "sql_seed_url": "/api/exports/sql-seed",
-        "zip_bundle_url": "/api/exports/bundle?format=csv"
+        "zip_bundle_url": "/api/exports/bundle?format=csv",
+        "export_source": "runtime_exports" if os.path.exists("data/runtime_exports") and os.listdir("data/runtime_exports") else "baseline_exports"
     }
 
 
@@ -65,21 +79,20 @@ def export_bundle_zip(format: str = "csv"):
     if clean_format not in ["csv", "json", "all"]:
         clean_format = "csv"
 
-    export_dir = "data/exports"
     zip_buffer = io.BytesIO()
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for name in VALID_DATASETS:
             if clean_format in ["csv", "all"]:
-                csv_path = os.path.join(export_dir, f"{name}.csv")
-                if os.path.exists(csv_path):
+                csv_path = resolve_export_file(f"{name}.csv")
+                if csv_path:
                     zip_file.write(csv_path, arcname=f"{name}.csv")
             if clean_format in ["json", "all"]:
-                json_path = os.path.join(export_dir, f"{name}.json")
-                if os.path.exists(json_path):
+                json_path = resolve_export_file(f"{name}.json")
+                if json_path:
                     zip_file.write(json_path, arcname=f"{name}.json")
-        sql_path = os.path.join(export_dir, "seed_data.sql")
-        if os.path.exists(sql_path):
+        sql_path = resolve_export_file("seed_data.sql")
+        if sql_path:
             zip_file.write(sql_path, arcname="seed_data.sql")
 
     zip_buffer.seek(0)
@@ -99,8 +112,8 @@ def export_bundle_zip(format: str = "csv"):
 @router.get("/sql-seed")
 @router.get("/seed_data.sql")
 def export_sql_seed():
-    file_path = "data/exports/seed_data.sql"
-    if not os.path.exists(file_path):
+    file_path = resolve_export_file("seed_data.sql")
+    if not file_path:
         raise HTTPException(status_code=404, detail="SQL seed data script not found. Please generate dataset first.")
     return FileResponse(
         file_path,
@@ -154,9 +167,9 @@ def export_dataset(
 
     ext = determined_format
     media_type = "application/json" if ext == "json" else "text/csv"
-    file_path = os.path.join("data/exports", f"{clean_name}.{ext}")
+    file_path = resolve_export_file(f"{clean_name}.{ext}")
 
-    if not os.path.exists(file_path):
+    if not file_path:
         raise HTTPException(
             status_code=404,
             detail=f"Dataset file '{clean_name}.{ext}' not found. Please generate dataset first."

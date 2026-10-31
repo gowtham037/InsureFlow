@@ -471,6 +471,19 @@ The InsureFlow platform has undergone exhaustive end-to-end audit verification a
   ```
 - **Audit Status**: **PASS**
 - **Evidence**: All 15 datasets are rendered dynamically from PostgreSQL and accessible via individual endpoints (`/api/exports/{dataset}?format=csv|json`) and the Data Management UI.
+- **Export Directory Architecture & Git Isolation**:
+  - `data/exports/`: Contains the canonical committed submission baseline (15 CSVs, 15 JSONs, `seed_data.sql`). Tracked in Git to guarantee an audited, reproducible benchmark upon repository clone.
+  - `data/ground_truth/`: Contains canonical committed expected anomaly labels (`ground_truth.csv`, `ground_truth.json`). Tracked in Git and verified with 100% precision and recall.
+  - `data/runtime_exports/`: Contains local runtime-generated exports produced during runtime generation or test executions. Ignored by Git (`.gitignore`) so that routine generation never modifies tracked submission artifacts.
+- **Dataset Regeneration**:
+  - *Runtime Generation* (writes to `data/runtime_exports/`, leaving Git working tree clean):
+    ```bash
+    docker compose exec backend python -m backend.app.data_generator --mode full --seed 20261022
+    ```
+  - *Canonical Baseline Regeneration* (explicit target `data/exports/`):
+    ```bash
+    docker compose exec backend python -m backend.app.data_generator --mode full --seed 20261022 --export-dir data/exports
+    ```
 
 ---
 

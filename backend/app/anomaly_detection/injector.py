@@ -17,7 +17,7 @@ from backend.app.utils.sequence import generate_anomaly_id, generate_endorsement
 from backend.app.models.base import RecordSource
 
 
-def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
+def inject_anomalies(db: Session, seed: int = 20261022, export_dir: str = "data/runtime_exports") -> List[Dict[str, Any]]:
     """
     Injects exactly the 5 mandatory anomaly types into designated records
     and records their ground truth labels.
@@ -45,7 +45,7 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
     free_assets = db.query(InsuredAsset).filter(
         ~InsuredAsset.id.in_(active_policy_asset_ids),
         InsuredAsset.record_source == RecordSource.GENERATED
-    ).all()
+    ).order_by(InsuredAsset.id.asc()).all()
     if len(free_assets) < 5:
         # Fallback to distinct assets
         free_assets = db.query(InsuredAsset).order_by(InsuredAsset.id.desc()).limit(10).all()
@@ -549,11 +549,11 @@ def inject_anomalies(db: Session, seed: int = 20261022) -> List[Dict[str, Any]]:
     db.flush()
 
     # Save to independent ground truth files
-    export_ground_truth(ground_truth_records)
+    export_ground_truth(ground_truth_records, export_dir=export_dir)
     return ground_truth_records
 
 
-def export_ground_truth(records: List[Dict[str, Any]], export_dir: str = "data/ground_truth"):
+def export_ground_truth(records: List[Dict[str, Any]], export_dir: str = "data/runtime_exports"):
     os.makedirs(export_dir, exist_ok=True)
     json_path = os.path.join(export_dir, "ground_truth.json")
     csv_path = os.path.join(export_dir, "ground_truth.csv")

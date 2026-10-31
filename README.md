@@ -356,6 +356,32 @@ InsureFlow provides dynamic, database-backed exports for **all 15 relational dat
 
 Download datasets directly from the **Data Management UI** (`http://localhost:3001/data-management`) or via REST API.
 
+### Dataset Architecture & Directory Structure
+
+To ensure deterministic benchmark integrity while allowing ongoing runtime execution, dataset storage is partitioned into two distinct tiers:
+
+1. **Canonical Submission Baseline (`data/exports/`)**:
+   - Contains the 15 committed canonical CSV datasets, 15 JSON datasets, and `seed_data.sql`.
+   - Tracked in Git to guarantee an audited, reproducible benchmark reference upon repository clone.
+2. **Canonical Ground Truth (`data/ground_truth/`)**:
+   - Contains the committed expected anomaly ground-truth labels (`ground_truth.csv` and `ground_truth.json`).
+   - Tracked in Git and maintained isolated from detection rule inputs.
+3. **Runtime-Generated Exports (`data/runtime_exports/`)**:
+   - Contains local runtime-generated exports produced whenever dataset generation or test suites are executed.
+   - **Ignored by Git** (`.gitignore`) so that routine generation never modifies tracked submission artifacts or dirties the Git working tree.
+   - The REST API (`/api/exports/*`) dynamically serves runtime exports from `data/runtime_exports/` when present, seamlessly falling back to `data/exports/`.
+
+### Dataset Regeneration Instructions
+
+- **Standard Runtime Generation** (writes to `data/runtime_exports/` without modifying tracked Git files):
+  ```bash
+  docker compose exec backend python -m backend.app.data_generator --mode full --seed 20261022
+  ```
+- **Regenerating Canonical Submission Baseline** (explicit target `data/exports/`):
+  ```bash
+  docker compose exec backend python -m backend.app.data_generator --mode full --seed 20261022 --export-dir data/exports
+  ```
+
 ---
 
 ## 15. Deterministic Reproducibility Audit (Seed 20261022)
@@ -466,8 +492,9 @@ InsureFlow/
 │   ├── tailwind.config.js
 │   └── tsconfig.json
 ├── data/
-│   ├── exports/                     # Generated 15 CSVs + 15 JSONs + seed_data.sql
-│   └── ground_truth/                # Independent ground truth anomaly labels
+│   ├── exports/                     # Canonical committed submission baseline (15 CSVs + 15 JSONs + seed_data.sql)
+│   ├── ground_truth/                # Canonical committed expected anomaly labels
+│   └── runtime_exports/            # Local runtime-generated exports (Git-ignored)
 ├── docs/                            # Comprehensive documentation suite
 │   ├── final_submission_audit.md    # Formal submission audit report & evidence
 │   ├── api_documentation.md

@@ -1,17 +1,25 @@
 import json
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from backend.app.models.anomaly import AnomalyRecord
 
 
 def evaluate_anomaly_metrics(
     db: Session,
-    ground_truth_path: str = "data/ground_truth/ground_truth.json"
+    ground_truth_path: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Evaluates detected anomalies against independently loaded ground truth labels.
+    Prefers data/runtime_exports/ground_truth.json if present from a runtime generation run,
+    otherwise falls back to the canonical submission baseline data/ground_truth/ground_truth.json.
     """
+    if ground_truth_path is None:
+        if os.path.exists("data/runtime_exports/ground_truth.json"):
+            ground_truth_path = "data/runtime_exports/ground_truth.json"
+        else:
+            ground_truth_path = "data/ground_truth/ground_truth.json"
+
     if not os.path.exists(ground_truth_path):
         return {
             "error": "Ground truth file not found. Please inject anomalies first.",

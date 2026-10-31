@@ -52,7 +52,8 @@ logger = logging.getLogger(__name__)
 def generate_dataset(
     mode: str = "starter",
     seed: int = 20261022,
-    db: Session = None
+    db: Session = None,
+    export_dir: str = "data/runtime_exports"
 ) -> Dict[str, Any]:
     """
     Deterministically generates realistic synthetic insurance dataset.
@@ -670,14 +671,14 @@ def generate_dataset(
         # Injected Negative Anomaly Scenarios & Detection
         # -------------------------------------------------------------
         logger.info("Injecting controlled negative anomalies for ground truth...")
-        inject_anomalies(db, seed=seed)
+        inject_anomalies(db, seed=seed, export_dir=export_dir)
 
         logger.info("Running independent anomaly detection...")
         run_anomaly_detection(db)
 
         # Export dataset to CSV and JSON
-        logger.info("Exporting generated dataset to data/exports/...")
-        export_summary = export_dataset_to_files(db)
+        logger.info(f"Exporting generated dataset to {export_dir}...")
+        export_summary = export_dataset_to_files(db, export_dir=export_dir)
 
         # Commit entire generation transaction atomically
         db.commit()
@@ -714,9 +715,10 @@ def main():
     parser = argparse.ArgumentParser(description="InsureFlow Synthetic Data Generator")
     parser.add_argument("--mode", choices=["starter", "full"], default="starter", help="Dataset generation scale")
     parser.add_argument("--seed", type=int, default=20261022, help="Fixed pseudo-random seed")
+    parser.add_argument("--export-dir", default="data/runtime_exports", help="Directory for generated export files")
     args = parser.parse_args()
 
-    result = generate_dataset(mode=args.mode, seed=args.seed)
+    result = generate_dataset(mode=args.mode, seed=args.seed, export_dir=args.export_dir)
     print("\n================ DATA GENERATION SUMMARY ================")
     print(f"Mode: {result['mode']} | Seed: {result['seed']}")
     for k, v in result["counts"].items():
