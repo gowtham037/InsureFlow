@@ -25,6 +25,25 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     init_db()
+    # Auto-seed full dataset on fresh database startup if enabled
+    import os
+    if os.getenv("AUTO_SEED_ON_STARTUP", "true").lower() in ("true", "1", "yes"):
+        from backend.app.database import SessionLocal
+        from backend.app.models.applicant import Applicant
+        from backend.app.data_generator.generator import generate_dataset
+        db = SessionLocal()
+        try:
+            if db.query(Applicant).count() == 0:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info("Fresh database detected (0 applicants). Auto-generating full production dataset...")
+                generate_dataset(mode="full", seed=settings.DATA_GEN_SEED, db=db)
+                logger.info("Auto-seeding full production dataset completed successfully.")
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Auto-seed warning on startup: {e}")
+        finally:
+            db.close()
 
 
 @app.get("/", tags=["Health"])

@@ -15,14 +15,14 @@ from backend.app.anomaly_detection.detector import run_anomaly_detection
 
 
 def test_user_data_preservation_across_generation():
-    db = SessionLocal()
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from backend.app.database import Base
+    test_engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(bind=test_engine)
+    TestSession = sessionmaker(bind=test_engine)
+    db = TestSession()
     try:
-        # Initial cleanup if prior test run aborted
-        db.query(Policy).filter(Policy.business_id == "POL-USER-999001").delete()
-        db.query(Quote).filter(Quote.business_id == "QTE-USER-999001").delete()
-        db.query(InsuredAsset).filter(InsuredAsset.business_id == "AST-USER-999001").delete()
-        db.query(Applicant).filter(Applicant.business_id == "APP-USER-999001").delete()
-        db.commit()
 
         # 1. Create a user applicant manually with RecordSource.USER
         test_app = Applicant(

@@ -113,12 +113,31 @@ def generate_dataset(
             db.query(Quote).filter(Quote.id.in_(non_user_q_ids)).delete(synchronize_session=False)
         db.query(UnderwritingDecision).filter(UnderwritingDecision.record_source != RecordSource.USER).delete(synchronize_session=False)
 
-        non_user_ast_ids = [a[0] for a in db.query(InsuredAsset.id).filter(InsuredAsset.record_source != RecordSource.USER).all()]
+        # Collect any asset IDs still referenced by surviving quotes
+        surviving_ast_ids = set(
+            [q[0] for q in db.query(Quote.asset_id).filter(Quote.asset_id.isnot(None)).all()]
+        )
+        non_user_ast_ids = [
+            a[0] for a in db.query(InsuredAsset.id)
+            .filter(InsuredAsset.record_source != RecordSource.USER)
+            .all()
+            if a[0] not in surviving_ast_ids
+        ]
         if non_user_ast_ids:
             db.query(AssetRiskFactor).filter(AssetRiskFactor.asset_id.in_(non_user_ast_ids)).delete(synchronize_session=False)
             db.query(InsuredAsset).filter(InsuredAsset.id.in_(non_user_ast_ids)).delete(synchronize_session=False)
 
-        non_user_app_ids = [a[0] for a in db.query(Applicant.id).filter(Applicant.record_source != RecordSource.USER).all()]
+        # Collect any applicant IDs still referenced by surviving quotes or assets
+        surviving_app_ids = set(
+            [q[0] for q in db.query(Quote.applicant_id).filter(Quote.applicant_id.isnot(None)).all()] +
+            [a[0] for a in db.query(InsuredAsset.applicant_id).filter(InsuredAsset.applicant_id.isnot(None)).all()]
+        )
+        non_user_app_ids = [
+            a[0] for a in db.query(Applicant.id)
+            .filter(Applicant.record_source != RecordSource.USER)
+            .all()
+            if a[0] not in surviving_app_ids
+        ]
         if non_user_app_ids:
             db.query(ApplicantRiskFactor).filter(ApplicantRiskFactor.applicant_id.in_(non_user_app_ids)).delete(synchronize_session=False)
             db.query(Applicant).filter(Applicant.id.in_(non_user_app_ids)).delete(synchronize_session=False)

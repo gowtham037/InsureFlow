@@ -24,9 +24,10 @@ cd InsureFlow
 cp .env.example .env
 
 # 3. Start PostgreSQL 16, FastAPI Backend, and React 19 Frontend
+#    (Backend automatically creates database schema and auto-seeds the full production dataset on fresh boot!)
 docker compose up --build -d
 
-# 4. Generate the FULL production dataset (3,000 applicants, 4,000 quotes, 2,000 policies, 1,200 renewals)
+# 4. (Optional) Explicitly re-generate the dataset or verify determinism (seed 20261022)
 docker compose exec backend python -m backend.app.data_generator --mode full --seed 20261022
 
 # 5. Access services:
