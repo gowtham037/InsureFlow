@@ -87,7 +87,7 @@ Once `docker compose up --build -d` completes and services are healthy:
 | :--- | :--- | :--- |
 | **Frontend Dashboard** | [http://localhost:3001/](http://localhost:3001/) | Main executive underwriting dashboard & policy portfolio overview |
 | **Data Management UI** | [http://localhost:3001/data-management](http://localhost:3001/data-management) | Interactive data generator, live entity counters, schema browser & 15-dataset export catalog |
-| **Anomaly Center UI** | [http://localhost:3001/anomalies](http://localhost:3001/anomalies) | 5 negative scenario audits, precision/recall metrics (100% / 100%) & inspection |
+| **Anomaly Center UI** | [http://localhost:3001/anomalies](http://localhost:3001/anomalies) | 5 negative scenario audits, precision/recall metrics (100% / 100% on 5 injected scenarios) & inspection |
 | **Swagger Interactive Docs** | [http://localhost:8000/docs](http://localhost:8000/docs) | Complete OpenAPI/Swagger REST documentation & interactive tester |
 | **Backend Health Probe** | [http://localhost:8000/health](http://localhost:8000/health) | Container liveness & database connectivity verification |
 
@@ -186,7 +186,7 @@ InsureFlow solves this by implementing an end-to-end, deterministic policy lifec
 - **Explainable Underwriting Engine**: Rules-driven decisioning matrix (`APPROVED`, `APPROVED_WITH_CONDITIONS`, `REFERRED`, `DECLINED`) with reviewer authority limits.
 - **Strict Policy Lifecycle Governance**:
   $$\text{Quote} \longrightarrow \text{Evaluation} \longrightarrow \text{Acceptance} \longrightarrow \text{Payment} \longrightarrow \text{Issuance} \longrightarrow \text{Active Policy} \longrightarrow \text{Endorsement / Renewal / Cancellation / Expiration}$$
-- **Independent Anomaly Detection Module**: Audits database invariants without ever inspecting ground truth labels, achieving 100% Precision and 100% Recall on 5 mandatory negative anomaly scenarios.
+- **Independent Anomaly Detection Module**: Audits database invariants without ever inspecting ground truth labels, achieving 100% Precision and 100% Recall scoped to the 5 predefined injected negative anomaly scenarios.
 - **Comprehensive 15-Dataset Export Catalog**: Dynamic database-backed downloads in both CSV and JSON formats, plus unified SQL seed data.
 - **Automated Validation Framework**: Multi-point auditing of primary key uniqueness, foreign key integrity, arithmetic reconciliation, and lifecycle transitions.
 - **Modern Enterprise Dashboard**: Responsive React 19 UI with Recharts telemetry, interactive underwriting workbenches, endorsement editors, and anomaly drill-downs.
@@ -245,7 +245,7 @@ flowchart TB
 - **Backend**: Python 3.12, FastAPI 0.115, Pydantic v2, Uvicorn, SQLAlchemy 2.0 ORM, psycopg2.
 - **Database**: PostgreSQL 16 (Primary containerized database) / SQLite (Automated fallback for standalone non-container usage).
 - **Data Engineering**: NumPy, Faker (fixed seed `20261022`), Python standard libraries (`csv`, `json`, `hashlib`).
-- **Testing**: Pytest 9.2, AnyIO, Faker, Starlette TestClient (24 automated test suites).
+- **Testing**: Pytest 9.2, AnyIO, Faker, Starlette TestClient (25 automated test cases across 6 suites).
 - **Frontend**: React 19, TypeScript, Vite, TailwindCSS, Lucide Icons, Recharts, Axios.
 - **Deployment**: Docker & Docker Compose, Nginx reverse proxy, multi-stage production builds.
 
@@ -320,11 +320,14 @@ The exact same generator (`generator.py`) supports parameterized execution:
 | **Underwriting Decisions** | 150 | **4,000** | 1:1 decision per quote |
 | **Negative Anomalies** | 5 | **5** | Tagged with `is_baseline = False` |
 
+> ℹ️ **Optional Developer Commands (Not Required for Evaluation)**:  
+> External evaluators **do not need to run manual data generation commands**. Docker Compose automatically initializes the complete full dataset on a fresh database upon first boot. The following commands are provided as optional developer utilities for custom re-seeding:
+
 ```bash
-# Generate Starter Dataset (~10 seconds)
+# (Optional) Generate Starter Dataset for quick local smoke-testing (~10 seconds)
 docker compose exec backend python -m backend.app.data_generator --mode starter --seed 20261022
 
-# Generate Full Production Dataset (~45 seconds)
+# (Optional) Manually re-generate Full Dataset (~45 seconds)
 docker compose exec backend python -m backend.app.data_generator --mode full --seed 20261022
 ```
 
@@ -396,6 +399,9 @@ To ensure uncompromised evaluation integrity:
 - **The Anomaly Detection Engine (`detector.py`) NEVER accesses ground truth files.** It queries only live PostgreSQL tables and evaluates invariant rules.
 - The Anomaly Evaluator (`evaluator.py`) loads ground truth post-detection to calculate classification performance:
 
+> ℹ️ **Scope of Anomaly Metrics**:  
+> The precision, recall, and F1 metrics below are benchmarked strictly against the **five predefined injected negative test scenarios** (1 issuance without acceptance, 1 past-dated expiration, 1 premium mismatch, 1 endorsement limit exceeded, and 1 overlapping coverage interval) and their isolated ground truth records, rather than representing an arbitrary open-domain statistical model.
+
 $$\text{Precision} = \frac{TP}{TP + FP} = \frac{5}{5 + 0} = \mathbf{1.0000} \quad (100\%)$$
 $$\text{Recall} = \frac{TP}{TP + FN} = \frac{5}{5 + 0} = \mathbf{1.0000} \quad (100\%)$$
 $$\text{F1-Score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}} = \mathbf{1.0000} \quad (100\%)$$
@@ -456,7 +462,9 @@ To ensure deterministic benchmark integrity while allowing ongoing runtime execu
    - **Ignored by Git** (`.gitignore`) so that routine generation never modifies tracked submission artifacts or dirties the Git working tree.
    - The REST API (`/api/exports/*`) dynamically serves runtime exports from `data/runtime_exports/` when present, seamlessly falling back to `data/exports/`.
 
-### Dataset Regeneration Instructions
+### Dataset Regeneration Instructions (Optional Developer Commands)
+
+> ℹ️ **Notice for External Evaluators**: External evaluators do not need to run manual regeneration commands; Docker Compose initializes the full database automatically upon first boot. The commands below are optional developer utilities:
 
 - **Standard Runtime Generation** (writes to `data/runtime_exports/` without modifying tracked Git files):
   ```bash
@@ -546,7 +554,7 @@ InsureFlow/
 │   │   │   └── __main__.py          # Module entry point: python -m backend.app.data_generator
 │   │   ├── config.py                # Environment configuration
 │   │   └── database.py              # Resilient PostgreSQL / SQLite session maker
-│   ├── tests/                       # 24 Automated Pytest test suites
+│   ├── tests/                       # 25 Automated Pytest tests (6 test modules)
 │   ├── Dockerfile                   # Python 3.12 Backend Dockerfile
 │   ├── pytest.ini                   # Pytest configuration
 │   └── requirements.txt             # Python dependencies
@@ -651,7 +659,7 @@ docker compose logs backend -f
 docker compose logs frontend -f
 docker compose logs db -f
 
-# Trigger manual dataset re-generation if desired (automatic on initial boot)
+# (Optional Developer Command) Trigger manual dataset re-generation if desired (automatic on initial boot)
 docker compose exec backend python -m backend.app.data_generator --mode full --seed 20261022
 
 # Stop running containers
@@ -685,6 +693,9 @@ npm run dev
 InsureFlow contains **25 automated tests** covering actuarial formulas, eligibility rules, lifecycle governance, anomaly injection/detection, database constraints, user data preservation, and determinism.
 
 **Safety Invariant**: All test suites execute against an isolated in-memory test runner (`sqlite:///:memory:`) so running tests **never overwrites or pollutes the production PostgreSQL database**.
+
+> ℹ️ **Verification Environment & Platform Scope**:  
+> Automated tests and execution logs documented herein were executed and verified in the Linux container environment (`platform linux`, Python 3.12). Docker Compose provides cross-platform evaluator execution across Windows (via Docker Desktop / WSL2), macOS (via Docker Desktop), and Linux by packaging these identical, isolated container images.
 
 ```bash
 # Run complete test suite inside Docker

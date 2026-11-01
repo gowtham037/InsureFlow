@@ -30,7 +30,7 @@ The InsureFlow platform has undergone exhaustive end-to-end audit verification a
 | **Ground Truth Isolation** | Detector blind to ground truth tables | **Zero ground truth access during detector execution** | **PASS** |
 | **Export Catalog (All 15)** | CSV, JSON & SQL Seed for all tables | **15 CSVs, 15 JSONs, and seed_data.sql generated** | **PASS** |
 | **Deterministic Reproducibility** | Bit-for-bit checksum & row parity (seed 20261022) | **Identical SHA-256 hashes across all 15 datasets** | **PASS** |
-| **Automated Test Suite** | All unit, integration & lifecycle tests pass | **24 passed, 0 failed in 8.31s** | **PASS** |
+| **Automated Test Suite** | All unit, integration & lifecycle tests pass | **25 passed, 0 failed in 10.76s** | **PASS** |
 | **Docker Compose Services** | DB, Backend, Frontend, Nginx operational | **PostgreSQL (5432), FastAPI (8000), Frontend (3001) healthy** | **PASS** |
 
 ---
@@ -539,37 +539,38 @@ The InsureFlow platform has undergone exhaustive end-to-end audit verification a
   rootdir: /app/backend
   configfile: pytest.ini
   plugins: anyio-4.15.1, Faker-40.44.0
-  collected 24 items                                                             
+  collected 25 items                                                             
 
   backend/tests/test_anomalies.py::test_anomaly_detection_identifies_all_five_types PASSED [  4%]
   backend/tests/test_anomalies.py::test_anomaly_evaluation_metrics_precision_and_recall PASSED [  8%]
   backend/tests/test_api.py::test_health_endpoints PASSED                  [ 12%]
   backend/tests/test_api.py::test_dashboard_endpoints PASSED               [ 16%]
   backend/tests/test_api.py::test_applicants_endpoints PASSED              [ 20%]
-  backend/tests/test_api.py::test_products_endpoints PASSED                [ 25%]
-  backend/tests/test_api.py::test_quotes_endpoints PASSED                  [ 29%]
-  backend/tests/test_api.py::test_underwriting_endpoints PASSED            [ 33%]
-  backend/tests/test_api.py::test_anomalies_endpoints PASSED               [ 37%]
-  backend/tests/test_api.py::test_admin_and_exports_endpoints PASSED       [ 41%]
-  backend/tests/test_lifecycle.py::test_quote_acceptance_lifecycle PASSED  [ 45%]
-  backend/tests/test_lifecycle.py::test_policy_issuance_invariants PASSED  [ 50%]
-  backend/tests/test_lifecycle.py::test_policy_cancellation_preserves_events PASSED [ 54%]
-  backend/tests/test_lifecycle.py::test_renewal_rejected_for_cancelled_policy PASSED [ 58%]
-  backend/tests/test_lifecycle.py::test_endorsement_limits_enforced PASSED [ 62%]
-  backend/tests/test_rules.py::test_motor_premium_calculation_deterministic PASSED [ 66%]
-  backend/tests/test_rules.py::test_home_premium_calculation_deterministic PASSED [ 70%]
-  backend/tests/test_rules.py::test_health_premium_calculation_deterministic PASSED [ 75%]
-  backend/tests/test_eligibility_age_bounds PASSED                          [ 79%]
-  backend/tests/test_rules.py::test_eligibility_vehicle_age_limit PASSED   [ 83%]
-  backend/tests/test_rules.py::test_risk_scoring_tiers PASSED              [ 87%]
-  backend/tests/test_rules.py::test_underwriting_decision_logic PASSED     [ 91%]
-  backend/tests/test_validation_reproducibility.py::test_foreign_key_and_database_integrity PASSED [ 95%]
+  backend/tests/test_products_endpoints PASSED                [ 24%]
+  backend/tests/test_api.py::test_quotes_endpoints PASSED                  [ 28%]
+  backend/tests/test_api.py::test_underwriting_endpoints PASSED            [ 32%]
+  backend/tests/test_api.py::test_anomalies_endpoints PASSED               [ 36%]
+  backend/tests/test_api.py::test_admin_and_exports_endpoints PASSED       [ 40%]
+  backend/tests/test_data_preservation.py::test_user_data_preservation_across_generation PASSED [ 44%]
+  backend/tests/test_lifecycle.py::test_quote_acceptance_lifecycle PASSED  [ 48%]
+  backend/tests/test_lifecycle.py::test_policy_issuance_invariants PASSED  [ 52%]
+  backend/tests/test_lifecycle.py::test_policy_cancellation_preserves_events PASSED [ 56%]
+  backend/tests/test_lifecycle.py::test_renewal_rejected_for_cancelled_policy PASSED [ 60%]
+  backend/tests/test_lifecycle.py::test_endorsement_limits_enforced PASSED [ 64%]
+  backend/tests/test_rules.py::test_motor_premium_calculation_deterministic PASSED [ 68%]
+  backend/tests/test_rules.py::test_home_premium_calculation_deterministic PASSED [ 72%]
+  backend/tests/test_rules.py::test_health_premium_calculation_deterministic PASSED [ 76%]
+  backend/tests/test_rules.py::test_eligibility_age_bounds PASSED          [ 80%]
+  backend/tests/test_rules.py::test_eligibility_vehicle_age_limit PASSED   [ 84%]
+  backend/tests/test_rules.py::test_risk_scoring_tiers PASSED              [ 88%]
+  backend/tests/test_rules.py::test_underwriting_decision_logic PASSED     [ 92%]
+  backend/tests/test_validation_reproducibility.py::test_foreign_key_and_database_integrity PASSED [ 96%]
   backend/tests/test_validation_reproducibility.py::test_deterministic_reproducibility PASSED [100%]
 
-  ======================== 24 passed, 1 warning in 8.31s =========================
+  ======================== 25 passed, 1 warning in 10.76s ========================
   ```
 - **Audit Status**: **PASS**
-- **Evidence**: Complete suite of 24 tests passes with 0 failures.
+- **Evidence**: Complete suite of 25 tests passes with 0 failures.
 
 ---
 
