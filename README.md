@@ -25,17 +25,23 @@ Safe default environment values are embedded directly into [`docker-compose.yml`
 
 ---
 
-### 📋 Prerequisite
+### 📋 Prerequisite: Docker
 
-* **Docker & Docker Compose** installed and running on your machine:
-  * **Windows & macOS**: Launch the **Docker Desktop** application and confirm the status bar displays **"Engine running"**.
-  * **Linux**: Ensure the Docker daemon is active (`sudo systemctl status docker` or `docker info`).
+InsureFlow requires **only Docker & Docker Compose**. You do **not** need to install Python, Node.js, or PostgreSQL.
+
+1. **If Docker is NOT installed on your machine**:
+   * **Windows & macOS**: Download and install **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (free).
+   * **Linux**: Install Docker Engine via your package manager (`sudo apt install docker.io docker-compose-v2`).
+
+2. **Before running the setup, ensure Docker is running**:
+   * **Windows & macOS**: Open the **Docker Desktop** app from your Start Menu / Applications folder and confirm the bottom status bar displays **"Engine running"** (green icon).
+   * **Linux**: Ensure the Docker daemon is active (`sudo systemctl start docker` or `docker info`).
 
 ---
 
 ### 🚀 Universal 3-Step Setup Command
 
-Run the following three commands in your terminal (**Windows PowerShell**, **macOS Terminal**, or **Linux Terminal**):
+Once Docker is running, open your terminal (**Windows PowerShell**, **macOS Terminal**, or **Linux Terminal**) and run:
 
 ```bash
 git clone https://github.com/gowtham037/InsureFlow.git
@@ -596,8 +602,8 @@ InsureFlow/
 
 ### Prerequisites:
 - **Docker & Docker Compose**:
-  - **Windows & macOS**: **Docker Desktop** (version 24.0+ / Compose v2+) running.
-  - **Linux**: **Docker Engine & Docker Compose v2** running.
+  - **If not installed**: Install **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (Windows & macOS) or Docker Engine (Linux).
+  - **If installed**: Ensure **Docker Desktop** is open and running (status shows "Engine running").
 - **Zero Host Dependencies**: Python, pip, Node.js, npm, and PostgreSQL are **not** required on the host system. All dependencies are containerized.
 
 ### Environment Configuration:
@@ -758,11 +764,11 @@ curl -s http://localhost:8000/api/exports | jq '{total_datasets: (.datasets | le
 
 ## 23. Troubleshooting Guide
 
-### 1. Docker Daemon Not Running
-* **Symptom**: `open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified` (Windows) or `Cannot connect to the Docker daemon at unix:///var/run/docker.sock` (macOS/Linux).
+### 1. Docker Not Installed or Docker Daemon Not Running
+* **Symptom**: `docker: command not found` or `open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified` (Windows) or `Cannot connect to the Docker daemon at unix:///var/run/docker.sock` (macOS/Linux).
 * **Resolution**:
-  - **Windows & macOS**: Open the **Docker Desktop** application from your Applications / Start Menu and wait until the whale icon turns green and displays **"Engine running"**.
-  - **Linux**: Start the Docker daemon with `sudo systemctl start docker`.
+  - **If Docker is not installed**: Install **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (free for Windows & macOS) or Docker Engine for Linux.
+  - **If Docker is installed but closed**: Open the **Docker Desktop** application from your Start Menu / Applications folder and wait until the bottom-left whale icon turns green and shows **"Engine running"**. On Linux, run `sudo systemctl start docker`.
 
 ### 2. Port Collisions (Port 5432, 8000, or 3001 already in use)
 If existing services on your host machine already bind to ports 5432, 8000, or 3001, customize the host ports in `.env`:
