@@ -13,9 +13,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-insureflow}"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 5s
     networks:
       - insureflow-network
 
@@ -29,20 +30,20 @@ services:
       - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-insureflow}
       - ENVIRONMENT=production
       - DATA_GEN_SEED=20261022
+      - AUTO_SEED_ON_STARTUP=true
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
     volumes:
-      - ./data:/app/data
-      - ./backend:/app/backend
-      - ./app:/app/app
+      - ./data/runtime_exports:/app/data/runtime_exports
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 15s
+      interval: 5s
       timeout: 5s
-      retries: 3
+      retries: 10
+      start_period: 25s
     networks:
       - insureflow-network
 
@@ -56,14 +57,16 @@ services:
       - "${FRONTEND_PORT:-3001}:80"
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     networks:
       - insureflow-network
 
 volumes:
   postgres_data:
+    name: insureflow_postgres_data
     driver: local
 
 networks:
   insureflow-network:
+    name: insureflow-network
     driver: bridge

@@ -41,7 +41,8 @@ def on_startup():
                 logger.info("Auto-seeding full production dataset completed successfully.")
         except Exception as e:
             import logging
-            logging.getLogger(__name__).warning(f"Auto-seed warning on startup: {e}")
+            db.rollback()
+            logging.getLogger(__name__).error(f"Auto-seed failed on startup: {e}", exc_info=True)
         finally:
             db.close()
 

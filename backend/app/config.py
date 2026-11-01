@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     
     # Synthetic Data Generator
     DATA_GEN_SEED: int = 20261022
+    AUTO_SEED_ON_STARTUP: bool = True
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [

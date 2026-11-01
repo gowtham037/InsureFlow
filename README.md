@@ -11,33 +11,82 @@
 
 ---
 
-## ⚡ Quick Start: Clean Installation & Verification
+## ⚡ Quick Start: Cross-Platform Clean Installation & Verification
 
-InsureFlow is designed for immediate, turn-key deployment using Docker Compose:
+InsureFlow supports turn-key deployment across **Windows 10/11**, **macOS (Apple Silicon & Intel)**, and **Linux**. Evaluators do **not** need to install Python, Node.js, PostgreSQL, or any host dependencies.
 
-```bash
-# 1. Clone the repository and navigate into the root directory
+### 📋 Universal Prerequisite
+Ensure the Docker runtime is installed and running on your system before proceeding:
+- **Windows & macOS**: Open the **Docker Desktop** application and confirm the status displays **"Engine running"**.
+- **Linux**: Verify the Docker daemon is active (`sudo systemctl status docker`).
+
+---
+
+### 💻 Installation Instructions by Operating System
+
+#### Option A: Windows (PowerShell)
+```powershell
+# 1. Clone repository and enter directory
 git clone https://github.com/gowtham037/InsureFlow.git
 cd InsureFlow
 
-# 2. Configure environment variables from template
+# 2. Copy environment template to .env
+Copy-Item .env.example .env
+
+# 3. Launch platform with Docker Compose
+#    (PostgreSQL 16 initializes, database schema creates, and the full baseline dataset auto-seeds on first boot!)
+docker compose up --build -d
+```
+
+#### Option B: macOS (Terminal — Apple Silicon M1/M2/M3/M4 & Intel)
+```bash
+# 1. Clone repository and enter directory
+git clone https://github.com/gowtham037/InsureFlow.git
+cd InsureFlow
+
+# 2. Copy environment template to .env
 cp .env.example .env
 
-# 3. Start PostgreSQL 16, FastAPI Backend, and React 19 Frontend
-#    (Backend automatically creates database schema and auto-seeds the full production dataset on fresh boot!)
+# 3. Launch platform with Docker Compose
+#    (PostgreSQL 16 initializes, database schema creates, and the full baseline dataset auto-seeds on first boot!)
 docker compose up --build -d
+```
 
-# 4. (Optional) Explicitly re-generate the dataset or verify determinism (seed 20261022)
-docker compose exec backend python -m backend.app.data_generator --mode full --seed 20261022
+#### Option C: Linux (Terminal — Ubuntu, Debian, Fedora, Arch)
+```bash
+# 1. Clone repository and enter directory
+git clone https://github.com/gowtham037/InsureFlow.git
+cd InsureFlow
 
-# 5. Access services:
-#    - Frontend Dashboard : http://localhost:3001
-#    - Data Management UI : http://localhost:3001/data-management
-#    - Anomaly Center UI  : http://localhost:3001/anomalies
-#    - Backend Swagger UI : http://localhost:8000/docs
-#    - Health Probe       : http://localhost:8000/health
+# 2. Copy environment template to .env
+cp .env.example .env
 
-# 6. Execute automated test suite (isolated test runner; production data preserved)
+# 3. Launch platform with Docker Compose
+#    (PostgreSQL 16 initializes, database schema creates, and the full baseline dataset auto-seeds on first boot!)
+docker compose up --build -d
+```
+
+---
+
+### 🌐 Accessing Platform Interfaces
+
+Once `docker compose up --build -d` completes and services are healthy:
+
+| Service / Interface | URL | Description |
+| :--- | :--- | :--- |
+| **Frontend Dashboard** | [http://localhost:3001/](http://localhost:3001/) | Main executive underwriting dashboard & policy overview |
+| **Data Management UI** | [http://localhost:3001/data-management](http://localhost:3001/data-management) | Interactive data generator, entity counts, schema browser & exports |
+| **Anomaly Center UI** | [http://localhost:3001/anomalies](http://localhost:3001/anomalies) | 5 negative scenario audits, precision/recall metrics & inspection |
+| **Swagger Interactive Docs** | [http://localhost:8000/docs](http://localhost:8000/docs) | Complete OpenAPI/Swagger REST documentation & interactive tester |
+| **Backend Health Probe** | [http://localhost:8000/health](http://localhost:8000/health) | Container liveness & database connectivity verification |
+
+---
+
+### 🧪 Automated Test Suite Execution
+
+Run the complete 25-test automated verification suite directly inside the isolated backend container (production database and volumes remain untouched):
+
+```bash
 docker compose exec backend pytest backend/tests/ -v
 ```
 
@@ -524,21 +573,21 @@ InsureFlow/
 
 ### Environment Configuration:
 Create `.env` in the project root:
-```bash
-cp .env.example .env
-```
+- **Windows (PowerShell)**: `Copy-Item .env.example .env`
+- **macOS / Linux (Terminal)**: `cp .env.example .env`
 
 Default `.env` configuration:
 ```ini
 ENVIRONMENT=production
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_secure_password_here
+POSTGRES_PASSWORD=postgres
 POSTGRES_DB=insureflow
 POSTGRES_HOST=db
 POSTGRES_PORT=5432
-DATABASE_URL=postgresql+psycopg2://postgres:your_secure_password_here@db:5432/insureflow
+DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/insureflow
 SQLITE_FALLBACK_URL=sqlite:///./insureflow.db
 DATA_GEN_SEED=20261022
+AUTO_SEED_ON_STARTUP=true
 BACKEND_PORT=8000
 FRONTEND_PORT=3001
 VITE_API_BASE_URL=http://localhost:8000/api
@@ -670,19 +719,30 @@ curl -s http://localhost:8000/api/exports | jq '{total_datasets: (.datasets | le
 
 ## 23. Troubleshooting Guide
 
-### Port Collisions (Port 5432, 8000, or 3001 in use)
-Change host port mappings in `docker-compose.yml` or `.env`:
+### 1. Docker Daemon Not Running
+* **Symptom**: `open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified` (Windows) or `Cannot connect to the Docker daemon at unix:///var/run/docker.sock` (macOS/Linux).
+* **Resolution**:
+  - **Windows & macOS**: Open the **Docker Desktop** application from your Applications / Start Menu and wait until the whale icon turns green and displays **"Engine running"**.
+  - **Linux**: Start the Docker daemon with `sudo systemctl start docker`.
+
+### 2. Port Collisions (Port 5432, 8000, or 3001 already in use)
+If existing services on your host machine already bind to ports 5432, 8000, or 3001, customize the host ports in `.env`:
 ```ini
 BACKEND_PORT=8080
 FRONTEND_PORT=3002
 ```
+Then restart the containers:
+```bash
+docker compose up -d
+```
 
-### Resetting and Re-generating Database from Scratch
+### 3. Resetting and Cold Re-generating the Dataset from Scratch
+To purge database volumes and perform a 100% clean initialization:
 ```bash
 docker compose down -v
 docker compose up --build -d
-docker compose exec backend python -m backend.app.data_generator --mode full --seed 20261022
 ```
+*(The backend automatically creates schema and auto-seeds the full 3,000 applicant production dataset upon fresh boot).*
 
 ---
 
