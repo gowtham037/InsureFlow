@@ -17,7 +17,7 @@ Traditional insurance carriers struggle with operational fragmentation across pr
 2. **Determinism**: The entire dataset is reproducibly generated using fixed pseudo-random seed `20261022`.
 3. **Rigorous Invariant Enforcement**: Anomaly detection audits five mandatory operational hazards with 100% precision and recall.
 4. **Data Isolation**: Synthetically injected negative cases are strictly tagged and separated from pristine baseline issued policies.
-5. **Zero-Friction Accessibility**: The platform deploys seamlessly via Docker Compose, standalone Python/SQLite, or public cloud hosting.
+5. **Zero-Friction Accessibility**: The platform deploys universally via single-command Docker Compose across Windows, macOS, and Linux without requiring host runtimes.
 
 ---
 

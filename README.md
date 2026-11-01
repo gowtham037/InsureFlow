@@ -1,7 +1,7 @@
 # InsureFlow: Insurance Underwriting & Policy Evaluation Platform
 
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)]()
-[![Tests](https://img.shields.io/badge/Tests-24%20Passed-success)]()
+[![Tests](https://img.shields.io/badge/Tests-25%20Passed-success)]()
 [![Anomaly Precision](https://img.shields.io/badge/Anomaly%20Precision-100%25-blue)]()
 [![Anomaly Recall](https://img.shields.io/badge/Anomaly%20Recall-100%25-blue)]()
 [![Audit Status](https://img.shields.io/badge/Audit-100%25%20Verified%20PASS-success)]()
@@ -11,23 +11,51 @@
 
 ---
 
-## ⚡ Quick Start: Evaluation Options & Installation Guide
+## ⚡ Quick Start: Universal Docker Installation
 
-InsureFlow supports three distinct evaluation modes to accommodate any evaluator environment:
+InsureFlow uses **Docker Compose** as the **single universal installation method** for external evaluators across:
+* **Windows 10 / 11** (PowerShell or Command Prompt with Docker Desktop)
+* **macOS** (Terminal — Apple Silicon M1/M2/M3/M4 & Intel with Docker Desktop)
+* **Linux** (Terminal — Ubuntu, Debian, Fedora, Arch with Docker Engine & Compose v2)
 
+### 🚫 Zero Host Dependencies
+External evaluators **do not** need to install Python, pip, Node.js, npm, PostgreSQL, or any programming language dependencies on their host machine. All runtime environments (Python 3.12, pandas 2.2+, FastAPI, Node.js 20, React 19, and PostgreSQL 16) are fully isolated and pre-configured inside their respective containers.
+
+Safe default environment values are embedded directly into [`docker-compose.yml`](docker-compose.yml), so **no `.env` copying or file configuration is required**.
+
+---
+
+### 📋 Prerequisite
+
+* **Docker & Docker Compose** installed and running on your machine:
+  * **Windows & macOS**: Launch the **Docker Desktop** application and confirm the status bar displays **"Engine running"**.
+  * **Linux**: Ensure the Docker daemon is active (`sudo systemctl status docker` or `docker info`).
+
+---
+
+### 🚀 Universal 3-Step Setup Command
+
+Run the following three commands in your terminal (**Windows PowerShell**, **macOS Terminal**, or **Linux Terminal**):
+
+```bash
+git clone https://github.com/gowtham037/InsureFlow.git
+cd InsureFlow
+docker compose up --build -d
 ```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                             THREE EVALUATION TIERS                               │
-├────────────────────────────────┬────────────────────────┬────────────────────────┤
-│ TIER 1: ZERO-PREREQUISITE LIVE │ TIER 2: LOCAL DOCKER   │ TIER 3: ZERO-DOCKER    │
-│ (Instant Browser Evaluation)   │ (Standard Full-Stack)  │ (Standalone Python)    │
-├────────────────────────────────┼────────────────────────┼────────────────────────┤
-│ • No installation required     │ • Multi-container      │ • Python 3.10+ only    │
-│ • No terminal commands         │ • PostgreSQL 16 + Vite │ • Built-in SQLite      │
-│ • Any OS, tablet, or laptop    │ • Exact seed 20261022  │ • Single command run   │
-│ • Access live URL directly     │ • docker compose up    │ • python run_standalone│
-└────────────────────────────────┴────────────────────────┴────────────────────────┘
-```
+
+### ⚙️ Automatic Initialization on First Boot
+When `docker compose up --build -d` runs for the first time on a fresh database, InsureFlow automatically:
+1. **Initializes the PostgreSQL 16 schema** and verifies database connectivity with automatic retry loops.
+2. **Generates the complete synthetic baseline dataset** (using fixed seed `20261022`):
+   * **3,000** applicants
+   * **4,000** baseline quotes
+   * **2,000** valid issued baseline policies
+   * **1,200** renewal contracts
+   * **350** endorsement adjustments
+   * **3** insurance product lines (Motor, Home, Individual Health) and **12** coverage options
+   * **All 5** negative anomaly scenarios with independent ground truth labels
+3. **Starts the Nginx reverse proxy** serving the compiled React 19 TypeScript dashboard.
+4. **No separate manual data generation command or migration is required.**
 
 ---
 
@@ -46,98 +74,41 @@ In accordance with the **YottaFlex AI Candidate Project Submission Guidelines**,
 
 ---
 
-### Tier 1: Zero-Prerequisite Cloud Demonstration (Browser-Only)
-
-For evaluators who do not wish to install or configure developer runtimes locally:
-* **Live Web Application**: Deployable via the included [`render.yaml`](render.yaml) blueprint or Docker Cloud.
-* **Requirements**: Any modern web browser (Google Chrome, Microsoft Edge, Mozilla Firefox, Apple Safari).
-* *(Note: To deploy your own instance to Render with one click, connect this repository and choose "Blueprint Deployment" using `render.yaml`).*
-
----
-
-### Tier 2: Turn-Key Containerized Deployment (Docker Compose)
-
-For evaluators testing full multi-container deployment (PostgreSQL 16, FastAPI Backend, and React 19 Frontend):
-
-> ⚠️ **Prerequisite**: Ensure the Docker daemon is running on your machine:
-> - **Windows & macOS**: Open **Docker Desktop** and confirm status is **"Engine running"**.
-> - **Linux**: Ensure the Docker service is active (`sudo systemctl status docker`).
-
-#### Option A: Windows (PowerShell)
-```powershell
-# 1. Clone repository and enter directory
-git clone https://github.com/gowtham037/InsureFlow.git
-cd InsureFlow
-
-# 2. Copy environment template to .env
-Copy-Item .env.example .env
-
-# 3. Launch platform with Docker Compose
-#    (PostgreSQL 16 initializes, database schema creates, and the full baseline dataset auto-seeds on first boot!)
-docker compose up --build -d
-```
-
-#### Option B: macOS (Terminal — Apple Silicon M1/M2/M3/M4 & Intel)
-```bash
-# 1. Clone repository and enter directory
-git clone https://github.com/gowtham037/InsureFlow.git
-cd InsureFlow
-
-# 2. Copy environment template to .env
-cp .env.example .env
-
-# 3. Launch platform with Docker Compose
-#    (PostgreSQL 16 initializes, database schema creates, and the full baseline dataset auto-seeds on first boot!)
-docker compose up --build -d
-```
-
-#### Option C: Linux (Terminal — Ubuntu, Debian, Fedora, Arch)
-```bash
-# 1. Clone repository and enter directory
-git clone https://github.com/gowtham037/InsureFlow.git
-cd InsureFlow
-
-# 2. Copy environment template to .env
-cp .env.example .env
-
-# 3. Launch platform with Docker Compose
-#    (PostgreSQL 16 initializes, database schema creates, and the full baseline dataset auto-seeds on first boot!)
-docker compose up --build -d
-```
-
----
-
-### Tier 3: Zero-Docker Standalone Execution (Python 3.10+)
-
-If Docker or Docker Desktop is **not installed** or cannot be launched, evaluators can run the complete backend platform locally using Python and the built-in SQLite database engine:
-
-```bash
-# 1. Clone repository and enter directory
-git clone https://github.com/gowtham037/InsureFlow.git
-cd InsureFlow
-
-# 2. Install backend dependencies
-pip install -r backend/requirements.txt
-
-# 3. Execute standalone runner
-#    (Auto-seeds all 3,000 applicants, quotes, policies, and anomalies into insureflow.db automatically!)
-python run_standalone.py
-```
-*Access API & Interactive Swagger Documentation at: **[http://localhost:8000/docs](http://localhost:8000/docs)***
-
----
-
-### 🌐 Accessing Platform Interfaces (Docker Mode)
+### 🌐 Accessing Platform Interfaces
 
 Once `docker compose up --build -d` completes and services are healthy:
 
 | Service / Interface | URL | Description |
 | :--- | :--- | :--- |
-| **Frontend Dashboard** | [http://localhost:3001/](http://localhost:3001/) | Main executive underwriting dashboard & policy overview |
-| **Data Management UI** | [http://localhost:3001/data-management](http://localhost:3001/data-management) | Interactive data generator, entity counts, schema browser & exports |
-| **Anomaly Center UI** | [http://localhost:3001/anomalies](http://localhost:3001/anomalies) | 5 negative scenario audits, precision/recall metrics & inspection |
+| **Frontend Dashboard** | [http://localhost:3001/](http://localhost:3001/) | Main executive underwriting dashboard & policy portfolio overview |
+| **Data Management UI** | [http://localhost:3001/data-management](http://localhost:3001/data-management) | Interactive data generator, live entity counters, schema browser & 15-dataset export catalog |
+| **Anomaly Center UI** | [http://localhost:3001/anomalies](http://localhost:3001/anomalies) | 5 negative scenario audits, precision/recall metrics (100% / 100%) & inspection |
 | **Swagger Interactive Docs** | [http://localhost:8000/docs](http://localhost:8000/docs) | Complete OpenAPI/Swagger REST documentation & interactive tester |
 | **Backend Health Probe** | [http://localhost:8000/health](http://localhost:8000/health) | Container liveness & database connectivity verification |
+
+---
+
+### 🧪 Automated Test Suite Execution
+
+Run the complete 25-test automated verification suite directly inside the isolated backend container (production PostgreSQL database and volume data remain untouched):
+
+```bash
+docker compose exec backend pytest backend/tests/ -v
+```
+
+---
+
+### 🛑 Stopping the Platform
+
+To stop the containers:
+```bash
+docker compose down
+```
+
+To stop containers and completely purge the PostgreSQL volume for a clean fresh re-initialization:
+```bash
+docker compose down -v
+```
 
 ---
 
@@ -173,7 +144,7 @@ docker compose exec backend pytest backend/tests/ -v
 16. [Automated Validation Framework](#16-automated-validation-framework)
 17. [Project Directory Structure](#17-project-directory-structure)
 18. [Prerequisites & Environment Configuration](#18-prerequisites--environment-configuration)
-19. [Execution Commands (Docker & Standalone)](#19-execution-commands-docker--standalone)
+19. [Docker Operations & Developer Setup (Optional)](#19-docker-operations--developer-setup-optional)
 20. [Running Automated Tests](#20-running-automated-tests)
 21. [Security & Secrets Management](#21-security--secrets-management)
 22. [Expected Outputs & Verification Commands](#22-expected-outputs--verification-commands)
@@ -624,18 +595,21 @@ InsureFlow/
 ## 18. Prerequisites & Environment Configuration
 
 ### Prerequisites:
-- **Docker & Docker Compose**: Docker Engine 24.0+ and Docker Compose v2+
-- *(Optional for standalone local execution)*:
-  - Python 3.11 or 3.12
-  - Node.js 20+ and npm 10+
-  - PostgreSQL 16 (optional; SQLite fallback is built-in)
+- **Docker & Docker Compose**:
+  - **Windows & macOS**: **Docker Desktop** (version 24.0+ / Compose v2+) running.
+  - **Linux**: **Docker Engine & Docker Compose v2** running.
+- **Zero Host Dependencies**: Python, pip, Node.js, npm, and PostgreSQL are **not** required on the host system. All dependencies are containerized.
 
 ### Environment Configuration:
-Create `.env` in the project root:
+InsureFlow is pre-configured for zero-configuration evaluation. Safe, production-grade default environment values are embedded directly inside [`docker-compose.yml`](docker-compose.yml) (e.g. `${POSTGRES_USER:-postgres}`, `${POSTGRES_DB:-insureflow}`).
+
+**External evaluators do not need to create or copy a `.env` file.**
+
+*(Optional Developer Customization)*: If you wish to override default port bindings or database credentials for custom deployments, copy `.env.example` to `.env`:
 - **Windows (PowerShell)**: `Copy-Item .env.example .env`
 - **macOS / Linux (Terminal)**: `cp .env.example .env`
 
-Default `.env` configuration:
+Default configuration values:
 ```ini
 ENVIRONMENT=production
 POSTGRES_USER=postgres
@@ -654,37 +628,45 @@ VITE_API_BASE_URL=http://localhost:8000/api
 
 ---
 
-## 19. Execution Commands (Docker & Standalone)
+## 19. Docker Operations & Developer Setup (Optional)
 
-### Containerized Execution (Recommended):
+### Standard Docker Operations (Evaluators):
 ```bash
-# Start all containers
+# Launch platform in detached mode
 docker compose up --build -d
 
-# Generate Full Dataset
+# Inspect container health probes and running status
+docker compose ps
+
+# View live aggregate container logs
+docker compose logs -f
+
+# View live logs for a specific service
+docker compose logs backend -f
+docker compose logs frontend -f
+docker compose logs db -f
+
+# Trigger manual dataset re-generation if desired (automatic on initial boot)
 docker compose exec backend python -m backend.app.data_generator --mode full --seed 20261022
 
-# Inspect container health
-docker compose ps
+# Stop running containers
+docker compose down
+
+# Stop containers and purge PostgreSQL volume for a complete fresh re-initialization
+docker compose down -v
 ```
 
-### Standalone Backend Execution (Without Docker):
+### Local Developer Workflow (Optional, Not Needed for Evaluation):
+> ℹ️ **Notice for Evaluators**: Reviewers should always evaluate using Docker Compose. Host Python execution requires Python 3.12+ (Python 3.8 and 3.9 are incompatible due to modern `pandas>=2.2.1` requirements).
 ```bash
-# Setup Python virtual environment
+# Backend (requires host Python 3.12+)
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
-
-# Run dataset generator
 PYTHONPATH=. python -m backend.app.data_generator --mode full --seed 20261022
-
-# Start Uvicorn ASGI server
 PYTHONPATH=. uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-*Note: If PostgreSQL is not active locally, the system automatically falls back to `sqlite:///./insureflow.db`.*
 
-### Standalone Frontend Execution:
-```bash
+# Frontend (requires host Node.js 20+)
 cd frontend
 npm install
 npm run dev
@@ -695,16 +677,13 @@ npm run dev
 
 ## 20. Running Automated Tests
 
-InsureFlow contains **24 automated tests** covering actuarial formulas, eligibility rules, lifecycle governance, anomaly injection/detection, database constraints, and determinism.
+InsureFlow contains **25 automated tests** covering actuarial formulas, eligibility rules, lifecycle governance, anomaly injection/detection, database constraints, user data preservation, and determinism.
 
 **Safety Invariant**: All test suites execute against an isolated in-memory test runner (`sqlite:///:memory:`) so running tests **never overwrites or pollutes the production PostgreSQL database**.
 
 ```bash
 # Run complete test suite inside Docker
 docker compose exec backend pytest backend/tests/ -v
-
-# Run locally
-PYTHONPATH=. pytest backend/tests/ -v
 ```
 
 ### Test Suite Summary:
@@ -719,6 +698,7 @@ backend/tests/test_api.py::test_quotes_endpoints PASSED
 backend/tests/test_api.py::test_underwriting_endpoints PASSED
 backend/tests/test_api.py::test_anomalies_endpoints PASSED
 backend/tests/test_api.py::test_admin_and_exports_endpoints PASSED
+backend/tests/test_data_preservation.py::test_user_data_preservation_across_generation PASSED
 backend/tests/test_lifecycle.py::test_quote_acceptance_lifecycle PASSED
 backend/tests/test_lifecycle.py::test_policy_issuance_invariants PASSED
 backend/tests/test_lifecycle.py::test_policy_cancellation_preserves_events PASSED
@@ -734,7 +714,7 @@ backend/tests/test_rules.py::test_underwriting_decision_logic PASSED
 backend/tests/test_validation_reproducibility.py::test_foreign_key_and_database_integrity PASSED
 backend/tests/test_validation_reproducibility.py::test_deterministic_reproducibility PASSED
 
-======================== 24 passed in 8.09s =========================
+======================== 25 passed, 1 warning in 15.36s ========================
 ```
 
 ---

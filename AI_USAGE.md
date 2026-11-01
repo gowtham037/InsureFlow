@@ -49,12 +49,13 @@ The following prompt themes represent actual prompts and developer interactions 
   3. Replaced host code bind-mounts with isolated, multi-arch container images (`linux/amd64` and `linux/arm64`).
   4. Added connection retry loops and cross-dialect SQLAlchemy inspection in `database.py`.
 
-### Phase 5: Zero-Prerequisite Evaluator Experience
-* **Prompt Theme**: *"An evaluator may use a completely fresh laptop running Windows, macOS, or Linux, with only the README available. The installation instructions should not assume that the reviewer already has Docker, Python, or Node.js installed."*
-* **Developer Action**: Established a multi-tier deployment strategy:
-  - **Tier 1 (Instant Evaluation)**: Public cloud-hosted web deployment requiring zero local installations.
-  - **Tier 2 (Local Docker Evaluation)**: Single-command `docker compose up --build -d` for reviewers with Docker.
-  - **Tier 3 (Local Standalone Evaluation)**: Python single-server runner with embedded React SPA and SQLite fallback.
+### Phase 5: Simplifying to One Universal Docker Installation
+* **Prompt Theme**: *"I tested InsureFlow on another Windows laptop and encountered: `ERROR: No matching distribution found for pandas>=2.2.1`. The laptop has Python 3.8, which is incompatible with the required pandas version. Make Docker Compose the SINGLE recommended and supported installation method across Windows 10/11, macOS, and Linux. Eliminate mandatory `.env` copy step. Host Python and pip must never be required."*
+* **Developer Action**:
+  - Unified all reviewer instructions into one universal Docker Compose setup (`git clone`, `cd InsureFlow`, `docker compose up --build -d`).
+  - Embedded safe defaults in `docker-compose.yml` (`${VAR:-default}`), eliminating the mandatory `.env` copying requirement.
+  - Ensured all runtimes (Python 3.12, pandas 2.2+, FastAPI, Node.js 20, React 19, PostgreSQL 16) execute containerized, guaranteeing zero host dependency conflicts.
+  - Removed confusing three-tier presentation and standalone runner from evaluator Quick Start, relegating developer workflows to optional sections.
 
 ---
 
@@ -62,6 +63,8 @@ The following prompt themes represent actual prompts and developer interactions 
 
 | Initial AI Proposal | Why It Was Rejected or Modified | Final Developer Solution |
 | :--- | :--- | :--- |
+| **Recommending Standalone Host Python Execution** | Failed on Windows evaluation laptop with Python 3.8: `ERROR: No matching distribution found for pandas>=2.2.1`. Different host machines have conflicting or obsolete Python versions. | **Enforced Docker Compose as the single universal evaluator method**. Containerized Python 3.12 runs pandas 2.2+ reliably with zero host prerequisites. |
+| **Mandatory `.env.example` Copy Step** | Caused syntax errors on Windows when commands or invalid characters were pasted into `.env`. | **Embedded safe defaults in `docker-compose.yml`** (`${POSTGRES_USER:-postgres}`, etc.) so `docker compose up --build -d` runs completely out-of-the-box without copying `.env`. |
 | **Host Directory Bind-Mounts** in `docker-compose.yml` (`- ./backend:/app/backend`) | Shadowed container files with host directory contents. On Windows and clean Linux clones, created permission errors, CRLF line-ending mismatches, and empty directory mounts. | **Removed host code bind-mounts**. Container images bake all application source code during build. Only `./data/runtime_exports` is mounted for output retrieval. |
 | **PostgreSQL-Specific `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`** | Failed during SQLite fallback testing with `sqlite3.OperationalError: near "IF": syntax error`. | **Implemented SQLAlchemy `inspect(engine)`** to inspect existing table columns dynamically across both PostgreSQL and SQLite dialects. |
 | **Overwriting Catch-All Root Route** in FastAPI | An initial catch-all route `@app.get("/{full_path:path}")` returned `405 Method Not Allowed` on `HEAD /` requests and broke `test_health_endpoints` which expected `GET /` to return service JSON. | Preserved standard FastAPI `@app.get("/")` and `@app.get("/health")` endpoints; scoped SPA routing to static assets and frontend paths. |

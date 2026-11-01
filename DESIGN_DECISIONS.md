@@ -47,6 +47,14 @@ This document records the foundational architectural decisions, actuarial models
 * **Context**: When an underwriter creates a custom applicant, vehicle, and policy through the UI, and later triggers "Re-generate Dataset" from the Data Management console, their custom records must not be deleted.
 * **Decision**: In `generator.py`, the cleanup routine explicitly filters deletion queries by `record_source != RecordSource.USER`. Parent applicants and assets referenced by surviving user quotes or policies are automatically protected from foreign-key cascade deletion.
 
+### Decision 7: Single Universal Docker Compose Evaluation Method (Zero Host Runtimes)
+* **Context**: External evaluators run diverse operating systems (Windows 10/11, macOS Intel & Apple Silicon, Linux). Testing demonstrated that standalone host execution frequently breaks due to host environment inconsistencies (e.g. host Python 3.8 failing with `ERROR: No matching distribution found for pandas>=2.2.1`).
+* **Decision**: Establish Docker Compose as the **single universal installation method** for all external evaluators.
+* **Rationale**:
+  * Guarantees identical execution across all platforms by bundling Python 3.12, pandas 2.2+, FastAPI, Node.js 20, React 19, and PostgreSQL 16 directly inside containers.
+  * Embedded default environment values (`${VAR:-default}`) eliminate the error-prone `.env` file copying step.
+  * Evaluators require only three standard commands (`git clone`, `cd InsureFlow`, `docker compose up --build -d`), with zero host programming languages or databases required.
+
 ---
 
 ## 2. Five Mandatory Negative Anomaly Scenarios
