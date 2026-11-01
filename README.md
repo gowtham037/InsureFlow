@@ -11,18 +11,57 @@
 
 ---
 
-## ⚡ Quick Start: Cross-Platform Clean Installation & Verification
+## ⚡ Quick Start: Evaluation Options & Installation Guide
 
-InsureFlow supports turn-key deployment across **Windows 10/11**, **macOS (Apple Silicon & Intel)**, and **Linux**. Evaluators do **not** need to install Python, Node.js, PostgreSQL, or any host dependencies.
+InsureFlow supports three distinct evaluation modes to accommodate any evaluator environment:
 
-### 📋 Universal Prerequisite
-Ensure the Docker runtime is installed and running on your system before proceeding:
-- **Windows & macOS**: Open the **Docker Desktop** application and confirm the status displays **"Engine running"**.
-- **Linux**: Verify the Docker daemon is active (`sudo systemctl status docker`).
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                             THREE EVALUATION TIERS                               │
+├────────────────────────────────┬────────────────────────┬────────────────────────┤
+│ TIER 1: ZERO-PREREQUISITE LIVE │ TIER 2: LOCAL DOCKER   │ TIER 3: ZERO-DOCKER    │
+│ (Instant Browser Evaluation)   │ (Standard Full-Stack)  │ (Standalone Python)    │
+├────────────────────────────────┼────────────────────────┼────────────────────────┤
+│ • No installation required     │ • Multi-container      │ • Python 3.10+ only    │
+│ • No terminal commands         │ • PostgreSQL 16 + Vite │ • Built-in SQLite      │
+│ • Any OS, tablet, or laptop    │ • Exact seed 20261022  │ • Single command run   │
+│ • Access live URL directly     │ • docker compose up    │ • python run_standalone│
+└────────────────────────────────┴────────────────────────┴────────────────────────┘
+```
 
 ---
 
-### 💻 Installation Instructions by Operating System
+### 📑 Candidate Submission Documentation Index
+
+In accordance with the **YottaFlex AI Candidate Project Submission Guidelines**, the following foundational documents accompany this repository:
+
+| Document | Description |
+| :--- | :--- |
+| [**`AI_USAGE.md`**](AI_USAGE.md) | **Transparent AI Disclosure**: AI tools used, actual prompts, accelerated areas, human validations, and documented rejections. |
+| [**`ARCHITECTURE.md`**](ARCHITECTURE.md) | **System Architecture**: High-level component diagrams, data flows, entity relationship diagrams (ERD), and security models. |
+| [**`DESIGN_DECISIONS.md`**](DESIGN_DECISIONS.md) | **Engineering Rationale**: Trade-offs, actuarial formulas, ground truth partitioning, and cascade delete safeguards. |
+| [**`TESTING.md`**](TESTING.md) | **Automated Test Evidence**: Catalog of 25 automated tests, execution logs, determinism audits, and anomaly metrics. |
+| [**`DEMO_GUIDE.md`**](DEMO_GUIDE.md) | **Evaluator Walkthrough**: 5–10 minute step-by-step demonstration script and interviewer technical Q&A talking points. |
+| [**`docs/final_submission_audit.md`**](docs/final_submission_audit.md) | **Formal Verification Audit**: Line-by-line requirement verification checklist and cryptographic file hashes. |
+
+---
+
+### Tier 1: Zero-Prerequisite Cloud Demonstration (Browser-Only)
+
+For evaluators who do not wish to install or configure developer runtimes locally:
+* **Live Web Application**: Deployable via the included [`render.yaml`](render.yaml) blueprint or Docker Cloud.
+* **Requirements**: Any modern web browser (Google Chrome, Microsoft Edge, Mozilla Firefox, Apple Safari).
+* *(Note: To deploy your own instance to Render with one click, connect this repository and choose "Blueprint Deployment" using `render.yaml`).*
+
+---
+
+### Tier 2: Turn-Key Containerized Deployment (Docker Compose)
+
+For evaluators testing full multi-container deployment (PostgreSQL 16, FastAPI Backend, and React 19 Frontend):
+
+> ⚠️ **Prerequisite**: Ensure the Docker daemon is running on your machine:
+> - **Windows & macOS**: Open **Docker Desktop** and confirm status is **"Engine running"**.
+> - **Linux**: Ensure the Docker service is active (`sudo systemctl status docker`).
 
 #### Option A: Windows (PowerShell)
 ```powershell
@@ -68,7 +107,27 @@ docker compose up --build -d
 
 ---
 
-### 🌐 Accessing Platform Interfaces
+### Tier 3: Zero-Docker Standalone Execution (Python 3.10+)
+
+If Docker or Docker Desktop is **not installed** or cannot be launched, evaluators can run the complete backend platform locally using Python and the built-in SQLite database engine:
+
+```bash
+# 1. Clone repository and enter directory
+git clone https://github.com/gowtham037/InsureFlow.git
+cd InsureFlow
+
+# 2. Install backend dependencies
+pip install -r backend/requirements.txt
+
+# 3. Execute standalone runner
+#    (Auto-seeds all 3,000 applicants, quotes, policies, and anomalies into insureflow.db automatically!)
+python run_standalone.py
+```
+*Access API & Interactive Swagger Documentation at: **[http://localhost:8000/docs](http://localhost:8000/docs)***
+
+---
+
+### 🌐 Accessing Platform Interfaces (Docker Mode)
 
 Once `docker compose up --build -d` completes and services are healthy:
 

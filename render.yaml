@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: insureflow
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    region: oregon
+    branch: main
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: ENVIRONMENT
+        value: production
+      - key: DATA_GEN_SEED
+        value: "20261022"
+      - key: AUTO_SEED_ON_STARTUP
+        value: "true"
+      - key: DATABASE_URL
+        value: sqlite:///./insureflow.db
+    healthCheckPath: /health
