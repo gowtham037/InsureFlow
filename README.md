@@ -65,13 +65,12 @@ When `docker compose up --build -d` runs for the first time on a fresh database,
 
 ---
 
-### 📑 Candidate Submission Documentation Index
+### 📑 Project Documentation Index
 
-In accordance with the **YottaFlex AI Candidate Project Submission Guidelines**, the following foundational documents accompany this repository:
+The following foundational engineering documents accompany this repository:
 
 | Document | Description |
 | :--- | :--- |
-| [**`AI_USAGE.md`**](AI_USAGE.md) | **Transparent AI Disclosure**: AI tools used, actual prompts, accelerated areas, human validations, and documented rejections. |
 | [**`ARCHITECTURE.md`**](ARCHITECTURE.md) | **System Architecture**: High-level component diagrams, data flows, entity relationship diagrams (ERD), and security models. |
 | [**`DESIGN_DECISIONS.md`**](DESIGN_DECISIONS.md) | **Engineering Rationale**: Trade-offs, actuarial formulas, ground truth partitioning, and cascade delete safeguards. |
 | [**`TESTING.md`**](TESTING.md) | **Automated Test Evidence**: Catalog of 25 automated tests, execution logs, determinism audits, and anomaly metrics. |
